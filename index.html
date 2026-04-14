@@ -3,44 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניהול רשימות - יד 3</title>
+    <title>ניהול רשימות - heb2ing</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #1a73e8; margin-bottom: 10px; }
-        
-        /* תפריט שליטה (חיפוש ומיון) */
-        .controls { 
-            background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; 
-            border: 1px solid #ddd; position: sticky; top: 10px; z-index: 100;
-            display: flex; flex-direction: column; gap: 15px; align-items: center;
-        }
-        .search-box { width: 100%; max-width: 400px; padding: 10px; border-radius: 20px; border: 1px solid #ccc; font-size: 16px; outline: none; }
-        .sort-options label { margin: 0 10px; font-weight: bold; cursor: pointer; }
+        h1 { text-align: center; color: #1a73e8; }
 
-        .section { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-        h2 { color: #333; border-right: 4px solid #1a73e8; padding-right: 10px; }
-        
+        /* תפריט שליטה עליון */
+        .controls { 
+            background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; 
+            border: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; align-items: center;
+        }
+        .search-box { width: 100%; max-width: 400px; padding: 10px; border-radius: 20px; border: 1px solid #ccc; font-size: 16px; }
+
+        /* עיצוב הלשוניות (Tabs) */
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-button { 
+            padding: 10px 25px; cursor: pointer; border: none; background: #e0e0e0; 
+            border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 16px;
+        }
+        .tab-button.active { background: #1a73e8; color: white; }
+        .tab-button:hover { background: #d0d0d0; }
+        .tab-button.active:hover { background: #1557b0; }
+
+        /* הצגה והסתרה של תוכן */
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* טבלאות ועיצוב כללי */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #f8f9fa; }
-        
-        .sub-list { margin: 15px 20px 0 0; background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; }
-        .stars { color: #fbbc05; font-weight: bold; margin-bottom: 5px; }
+        .sub-list { margin: 15px 20px 10px 0; background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; }
+        .stars { color: #fbbc05; font-weight: bold; }
+        .sort-options { font-size: 14px; margin-top: 5px; }
 
-        .suggestion-box { background: #e8f0fe; padding: 20px; border-radius: 10px; margin-top: 20px; }
+        .suggestion-box { background: #e8f0fe; padding: 20px; border-radius: 10px; margin-top: 30px; }
         textarea { width: 100%; height: 80px; margin-top: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; resize: none; }
-        button { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; font-weight: bold; }
-        button:hover { background: #1557b0; }
+        button.send-btn { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>ניהול רשימות יד 3</h1>
+    <h1>ניהול רשימות heb2ing</h1>
 
     <div class="controls">
-        <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה ברשימות..." onkeyup="filterTables()">
+        <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה בכל הרשימות..." onkeyup="filterTables()">
         <div class="sort-options">
             <span>מיין לפי:</span>
             <label><input type="radio" name="sortOrder" value="he" onclick="sortTable('he')"> א"ב עברי</label>
@@ -48,7 +59,13 @@
         </div>
     </div>
 
-    <div class="section">
+    <div class="tabs">
+        <button class="tab-button active" onclick="openTab(event, 'listA')">רשימה א'</button>
+        <button class="tab-button" onclick="openTab(event, 'listB')">רשימה ב'</button>
+        <button class="tab-button" onclick="openTab(event, 'listC')">רשימה ג'</button>
+    </div>
+
+    <div id="listA" class="tab-content active">
         <h2>רשימה א'</h2>
         <table class="sortable-table">
             <thead><tr><th>עברית</th><th>אנגלית</th></tr></thead>
@@ -59,7 +76,7 @@
         </table>
     </div>
 
-    <div class="section">
+    <div id="listB" class="tab-content">
         <h2>רשימה ב'</h2>
         <table class="sortable-table">
             <thead><tr><th>עברית</th><th>אנגלית</th></tr></thead>
@@ -70,8 +87,8 @@
         </table>
     </div>
 
-    <div class="section">
-        <h2>רשימה ג'</h2>
+    <div id="listC" class="tab-content">
+        <h2>רשימה ג' (דירוגים)</h2>
         
         <div class="sub-list">
             <p class="stars">★ (כוכב 1)</p>
@@ -104,12 +121,35 @@
     <div class="suggestion-box">
         <h3>הצעה למילה חדשה</h3>
         <textarea id="userSuggestion" placeholder="כתוב כאן את הצעתך..."></textarea>
-        <button onclick="sendSuggestion()">שלח הצעה למנהל</button>
+        <button class="send-btn" onclick="alert('ההצעה נשלחה!')">שלח הצעה</button>
     </div>
 </div>
 
 <script>
-// פונקציית מיון
+// פונקציה למעבר בין לשוניות
+function openTab(evt, tabName) {
+    var i, tabContent, tabButtons;
+
+    // הסתרת כל התכנים
+    tabContent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabContent.length; i++) {
+        tabContent[i].style.display = "none";
+        tabContent[i].classList.remove("active");
+    }
+
+    // הסרת ה-active מכל הכפתורים
+    tabButtons = document.getElementsByClassName("tab-button");
+    for (i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].classList.remove("active");
+    }
+
+    // הצגת הלשונית שנבחרה וסימון הכפתור
+    document.getElementById(tabName).style.display = "block";
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+
+// פונקציית מיון (מעודכנת ללשוניות)
 function sortTable(lang) {
     const tables = document.querySelectorAll('.sortable-table');
     tables.forEach(table => {
@@ -128,7 +168,7 @@ function sortTable(lang) {
     });
 }
 
-// פונקציית חיפוש
+// פונקציית חיפוש (מחפשת בכל הטבלאות)
 function filterTables() {
     const input = document.getElementById('searchInput').value.toLowerCase();
     const rows = document.querySelectorAll('.sortable-table tbody tr');
@@ -137,15 +177,6 @@ function filterTables() {
         const text = row.innerText.toLowerCase();
         row.style.display = text.includes(input) ? '' : 'none';
     });
-}
-
-// שליחת הצעה
-function sendSuggestion() {
-    const msg = document.getElementById('userSuggestion').value;
-    if(msg.trim()) {
-        alert("ההצעה התקבלה ותיבדק בקרוב!");
-        document.getElementById('userSuggestion').value = "";
-    }
 }
 </script>
 
