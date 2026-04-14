@@ -14,30 +14,31 @@
             background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; 
             border: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; align-items: center;
         }
-        .search-box { width: 100%; max-width: 400px; padding: 10px; border-radius: 20px; border: 1px solid #ccc; font-size: 16px; }
+        .search-box { width: 100%; max-width: 400px; padding: 10px; border-radius: 20px; border: 1px solid #ccc; font-size: 16px; outline: none; }
 
         /* עיצוב הלשוניות (Tabs) */
-        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-button { 
+        .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-button, .sub-tab-button { 
             padding: 10px 25px; cursor: pointer; border: none; background: #e0e0e0; 
             border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 16px;
         }
-        .tab-button.active { background: #1a73e8; color: white; }
-        .tab-button:hover { background: #d0d0d0; }
-        .tab-button.active:hover { background: #1557b0; }
+        .tab-button.active, .sub-tab-button.active { background: #1a73e8; color: white; }
+        
+        /* עיצוב מיוחד לתת-לשוניות של הכוכבים */
+        .sub-tabs { margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px; }
+        .sub-tab-button { font-size: 14px; padding: 8px 15px; background: #f0f0f0; color: #555; }
+        .sub-tab-button.active { background: #fbbc05; color: black; }
 
-        /* הצגה והסתרה של תוכן */
-        .tab-content { display: none; animation: fadeIn 0.3s; }
-        .tab-content.active { display: block; }
+        /* הצגה והסתרה */
+        .tab-content, .sub-tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active, .sub-tab-content.active { display: block; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* טבלאות ועיצוב כללי */
+        /* טבלאות */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #f8f9fa; }
-        .sub-list { margin: 15px 20px 10px 0; background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; }
-        .stars { color: #fbbc05; font-weight: bold; }
         .sort-options { font-size: 14px; margin-top: 5px; }
 
         .suggestion-box { background: #e8f0fe; padding: 20px; border-radius: 10px; margin-top: 30px; }
@@ -88,94 +89,84 @@
     </div>
 
     <div id="listC" class="tab-content">
-        <h2>רשימה ג' (דירוגים)</h2>
+        <h2>רשימה ג' - בחר דירוג:</h2>
         
-        <div class="sub-list">
-            <p class="stars">★ (כוכב 1)</p>
+        <div class="sub-tabs">
+            <button class="sub-tab-button" onclick="openSubTab(event, 'star1')">★ 1</button>
+            <button class="sub-tab-button" onclick="openSubTab(event, 'star2')">★★ 2</button>
+            <button class="sub-tab-button active" onclick="openSubTab(event, 'star3')">★★★ 3</button>
+        </div>
+
+        <div id="star1" class="sub-tab-content">
             <table class="sortable-table">
-                <tbody>
-                    <tr><td>ספר</td><td>Book</td></tr>
-                </tbody>
+                <tbody><tr><td>ספר</td><td>Book</td></tr></tbody>
             </table>
         </div>
 
-        <div class="sub-list">
-            <p class="stars">★★ (2 כוכבים)</p>
+        <div id="star2" class="sub-tab-content">
             <table class="sortable-table">
-                <tbody>
-                    <tr><td>מחשב</td><td>Computer</td></tr>
-                </tbody>
+                <tbody><tr><td>מחשב</td><td>Computer</td></tr></tbody>
             </table>
         </div>
 
-        <div class="sub-list">
-            <p class="stars">★★★ (3 כוכבים)</p>
+        <div id="star3" class="sub-tab-content active">
             <table class="sortable-table">
-                <tbody>
-                    <tr><td>מטוס</td><td>Airplane</td></tr>
-                </tbody>
+                <tbody><tr><td>מטוס</td><td>Airplane</td></tr></tbody>
             </table>
         </div>
     </div>
 
     <div class="suggestion-box">
         <h3>הצעה למילה חדשה</h3>
-        <textarea id="userSuggestion" placeholder="כתוב כאן את הצעתך..."></textarea>
+        <textarea id="userSuggestion" placeholder="כתוב כאן..."></textarea>
         <button class="send-btn" onclick="alert('ההצעה נשלחה!')">שלח הצעה</button>
     </div>
 </div>
 
 <script>
-// פונקציה למעבר בין לשוניות
+// פונקציה ללשוניות ראשיות
 function openTab(evt, tabName) {
-    var i, tabContent, tabButtons;
-
-    // הסתרת כל התכנים
+    let i, tabContent, tabButtons;
     tabContent = document.getElementsByClassName("tab-content");
-    for (i = 0; i < tabContent.length; i++) {
-        tabContent[i].style.display = "none";
-        tabContent[i].classList.remove("active");
-    }
-
-    // הסרת ה-active מכל הכפתורים
+    for (i = 0; i < tabContent.length; i++) { tabContent[i].classList.remove("active"); }
     tabButtons = document.getElementsByClassName("tab-button");
-    for (i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].classList.remove("active");
-    }
-
-    // הצגת הלשונית שנבחרה וסימון הכפתור
-    document.getElementById(tabName).style.display = "block";
+    for (i = 0; i < tabButtons.length; i++) { tabButtons[i].classList.remove("active"); }
     document.getElementById(tabName).classList.add("active");
     evt.currentTarget.classList.add("active");
 }
 
-// פונקציית מיון (מעודכנת ללשוניות)
+// פונקציה לתת-לשוניות (כוכבים)
+function openSubTab(evt, subName) {
+    let i, subContent, subButtons;
+    subContent = document.getElementsByClassName("sub-tab-content");
+    for (i = 0; i < subContent.length; i++) { subContent[i].classList.remove("active"); }
+    subButtons = document.getElementsByClassName("sub-tab-button");
+    for (i = 0; i < subButtons.length; i++) { subButtons[i].classList.remove("active"); }
+    document.getElementById(subName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+
+// מיון
 function sortTable(lang) {
     const tables = document.querySelectorAll('.sortable-table');
     tables.forEach(table => {
         const tbody = table.querySelector('tbody');
         if (!tbody) return;
         const rows = Array.from(tbody.querySelectorAll('tr'));
-
         rows.sort((a, b) => {
             let cellIndex = (lang === 'he') ? 0 : 1;
-            let valA = a.cells[cellIndex].innerText.toLowerCase();
-            let valB = b.cells[cellIndex].innerText.toLowerCase();
-            return valA.localeCompare(valB, lang === 'he' ? 'he' : 'en');
+            return a.cells[cellIndex].innerText.toLowerCase().localeCompare(b.cells[cellIndex].innerText.toLowerCase(), lang === 'he' ? 'he' : 'en');
         });
-
         rows.forEach(row => tbody.appendChild(row));
     });
 }
 
-// פונקציית חיפוש (מחפשת בכל הטבלאות)
+// חיפוש
 function filterTables() {
     const input = document.getElementById('searchInput').value.toLowerCase();
     const rows = document.querySelectorAll('.sortable-table tbody tr');
-
     rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        row.style.display = text.includes(input) ? '' : 'none';
+        row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none';
     });
 }
 </script>
