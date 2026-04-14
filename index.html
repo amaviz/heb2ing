@@ -24,7 +24,6 @@
         }
         .tab-button.active, .sub-tab-button.active { background: #1a73e8; color: white; }
         
-        /* עיצוב מיוחד לתת-לשוניות של הכוכבים */
         .sub-tabs { margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px; }
         .sub-tab-button { font-size: 14px; padding: 8px 15px; background: #f0f0f0; color: #555; }
         .sub-tab-button.active { background: #fbbc05; color: black; }
@@ -41,9 +40,9 @@
         th { background-color: #f8f9fa; }
         .sort-options { font-size: 14px; margin-top: 5px; }
 
-        .suggestion-box { background: #e8f0fe; padding: 20px; border-radius: 10px; margin-top: 30px; }
-        textarea { width: 100%; height: 80px; margin-top: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; resize: none; }
-        button.send-btn { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
+        /* תיבת הצעות עם הטופס שלך */
+        .suggestion-box { background: #e8f0fe; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: center; }
+        .form-wrapper { margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
     </style>
 </head>
 <body>
@@ -90,7 +89,6 @@
 
     <div id="listC" class="tab-content">
         <h2>רשימה ג' - בחר דירוג:</h2>
-        
         <div class="sub-tabs">
             <button class="sub-tab-button" onclick="openSubTab(event, 'star1')">★ 1</button>
             <button class="sub-tab-button" onclick="openSubTab(event, 'star2')">★★ 2</button>
@@ -102,13 +100,11 @@
                 <tbody><tr><td>ספר</td><td>Book</td></tr></tbody>
             </table>
         </div>
-
         <div id="star2" class="sub-tab-content">
             <table class="sortable-table">
                 <tbody><tr><td>מחשב</td><td>Computer</td></tr></tbody>
             </table>
         </div>
-
         <div id="star3" class="sub-tab-content active">
             <table class="sortable-table">
                 <tbody><tr><td>מטוס</td><td>Airplane</td></tr></tbody>
@@ -118,13 +114,22 @@
 
     <div class="suggestion-box">
         <h3>הצעה למילה חדשה</h3>
-        <textarea id="userSuggestion" placeholder="כתוב כאן..."></textarea>
-        <button class="send-btn" onclick="alert('ההצעה נשלחה!')">שלח הצעה</button>
+        <p>מלאו את הטופס וההצעה תתווסף לאחר בדיקה:</p>
+        <div class="form-wrapper">
+            <iframe 
+                src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" 
+                width="100%" 
+                height="500" 
+                frameborder="0" 
+                marginheight="0" 
+                marginwidth="0">
+                בטעינה…
+            </iframe>
+        </div>
     </div>
 </div>
 
 <script>
-// פונקציה ללשוניות ראשיות
 function openTab(evt, tabName) {
     let i, tabContent, tabButtons;
     tabContent = document.getElementsByClassName("tab-content");
@@ -135,7 +140,6 @@ function openTab(evt, tabName) {
     evt.currentTarget.classList.add("active");
 }
 
-// פונקציה לתת-לשוניות (כוכבים)
 function openSubTab(evt, subName) {
     let i, subContent, subButtons;
     subContent = document.getElementsByClassName("sub-tab-content");
@@ -146,7 +150,6 @@ function openSubTab(evt, subName) {
     evt.currentTarget.classList.add("active");
 }
 
-// מיון
 function sortTable(lang) {
     const tables = document.querySelectorAll('.sortable-table');
     tables.forEach(table => {
@@ -161,7 +164,6 @@ function sortTable(lang) {
     });
 }
 
-// חיפוש
 function filterTables() {
     const input = document.getElementById('searchInput').value.toLowerCase();
     const rows = document.querySelectorAll('.sortable-table tbody tr');
