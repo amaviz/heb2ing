@@ -12,6 +12,10 @@
         .search-area { width: 100%; max-width: 400px; display: flex; gap: 5px; align-items: center; }
         .search-box { flex-grow: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #ccc; font-size: 16px; outline: none; }
         
+        .filter-options { display: flex; gap: 8px; margin-top: 10px; }
+        .filter-btn { padding: 6px 15px; border: 1px solid #1a73e8; background: white; color: #1a73e8; border-radius: 15px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .filter-btn.active { background: #1a73e8; color: white; }
+
         .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-button, .sub-tab-button { padding: 10px 25px; cursor: pointer; border: none; background: #e0e0e0; border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 16px; }
         .tab-button.active { background: #1a73e8; color: white; }
@@ -41,7 +45,14 @@
         <div class="search-area">
             <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה ברשימה זו..." onkeyup="filterTables()">
         </div>
-        <div class="sort-options">
+        
+        <div class="filter-options">
+            <button class="filter-btn active" onclick="setWordFilter('both', this)">הכל</button>
+            <button class="filter-btn" onclick="setWordFilter('word', this)">מילים בודדות</button>
+            <button class="filter-btn" onclick="setWordFilter('sentence', this)">משפטים</button>
+        </div>
+
+        <div class="sort-options" style="margin-top: 10px;">
             <label><input type="radio" name="sortOrder" value="he" checked onclick="currentSort='he'; renderAll();"> א"ב עברי</label>
             <label><input type="radio" name="sortOrder" value="en" onclick="currentSort='en'; renderAll();"> A-Z (אנגלי)</label>
         </div>
@@ -112,7 +123,6 @@
     <div id="noResults" class="no-results">לא נמצאה מילה מתאימה</div>
 
     <div class="form-container">
-        <h3 style="text-align: center; color: #1a73e8;">הצעה למילה חדשה או דיווח על טעות</h3>
         <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" width="100%" height="800" frameborder="0">טוען...</iframe>
     </div>
 </div>
@@ -123,6 +133,7 @@
     
     let allData = [];
     let currentSort = 'he';
+    let wordFilter = 'both'; // both, word, sentence
 
     async function fetchData() {
         try {
@@ -133,14 +144,26 @@
                 const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
                 let rawType = cols[2] ? cols[2].replace('רשימה ', '').trim() : 'א';
                 let mappedType = rawType === 'א' ? 'A' : (rawType === 'ב' ? 'B' : 'C');
+                
+                // זיהוי אם זה משפט (רווח בעברית או באנגלית)
+                const isSentence = cols[0].includes(' ') || cols[1].includes(' ');
+
                 return { 
                     he: cols[0] || '', en: cols[1] || '', 
-                    type: mappedType, rawHeb: rawType, stars: cols[3] || '3' 
+                    type: mappedType, rawHeb: rawType, stars: cols[3] || '3',
+                    isSentence: isSentence
                 };
             }).filter(item => item.he !== '');
             document.getElementById('loading').style.display = 'none';
             renderAll();
         } catch (e) { document.getElementById('loading').innerText = "שגיאה בטעינה."; }
+    }
+
+    function setWordFilter(type, btn) {
+        wordFilter = type;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterTables();
     }
 
     function renderAll() {
@@ -168,9 +191,10 @@
                 const tr = document.createElement('tr');
                 tr.className = 'data-row';
                 tr.setAttribute('data-parent-id', key);
+                tr.setAttribute('data-is-sentence', item.isSentence);
                 tr.setAttribute('data-list', item.type);
-                tr.setAttribute('data-stars', item.stars);
                 tr.setAttribute('data-heb-type', item.rawHeb);
+                tr.setAttribute('data-stars', item.stars);
                 
                 tr.innerHTML = `<td><span class="word-text">${item.he}</span><span class="info-tag"></span></td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
@@ -182,7 +206,6 @@
     function filterTables() {
         const q = document.getElementById('searchInput').value.toLowerCase();
         const activeSubTab = document.querySelector('.tab-content.active .sub-tab-content.active');
-        
         let currentVisibleId = activeSubTab ? activeSubTab.id : "";
         let visibleRowsCount = 0;
 
@@ -190,27 +213,29 @@
             const wordText = r.querySelector('.word-text').innerText.toLowerCase();
             const translationText = r.cells[1].innerText.toLowerCase();
             const rowParentId = r.getAttribute('data-parent-id');
-            const listType = r.getAttribute('data-list');
-            const hebType = r.getAttribute('data-heb-type');
-            const stars = r.getAttribute('data-stars');
-            const infoTag = r.querySelector('.info-tag');
-
+            const isSentence = r.getAttribute('data-is-sentence') === 'true';
+            
             const matchesQ = wordText.includes(q) || translationText.includes(q);
             const isVisibleTable = (rowParentId === currentVisibleId);
+            
+            // סינון מילים/משפטים
+            let matchesType = true;
+            if (wordFilter === 'word') matchesType = !isSentence;
+            else if (wordFilter === 'sentence') matchesType = isSentence;
 
-            if (matchesQ && isVisibleTable) {
+            if (matchesQ && isVisibleTable && matchesType) {
                 r.style.display = "";
                 visibleRowsCount++;
             } else {
                 r.style.display = "none";
             }
 
-            // לוגיקת הצגת תגיות מעודכנת
-            if (currentVisibleId === 'GlobalALL') {
-                infoTag.innerText = `רשימה ${hebType} - ★${stars}`;
-            } else if (currentVisibleId.startsWith('ALL')) {
-                // כאן התיקון: כשבוחרים כוכבים ספציפיים בכל המילים - רואים רק את שם הרשימה
-                infoTag.innerText = `רשימה ${hebType}`;
+            // עדכון תגיות מידע
+            const infoTag = r.querySelector('.info-tag');
+            const hebType = r.getAttribute('data-heb-type');
+            const stars = r.getAttribute('data-stars');
+            if (currentVisibleId === 'GlobalALL' || currentVisibleId.startsWith('ALL')) {
+                infoTag.innerText = currentVisibleId === 'GlobalALL' ? `רשימה ${hebType} - ★${stars}` : `רשימה ${hebType}`;
             } else if (currentVisibleId.includes('_ALL')) {
                 infoTag.innerText = `★${stars}`;
             } else {
@@ -223,7 +248,7 @@
             d.style.display = (q === "" && parentId === currentVisibleId) ? "" : "none";
         });
 
-        document.getElementById('noResults').style.display = (visibleRowsCount === 0 && q !== "") ? "block" : "none";
+        document.getElementById('noResults').style.display = (visibleRowsCount === 0 && (q !== "" || wordFilter !== 'both')) ? "block" : "none";
     }
 
     function openTab(e, id) {
