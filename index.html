@@ -21,6 +21,10 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #f8f9fa; }
+        
+        /* עיצוב שורת האות הגדולה */
+        .letter-divider { background-color: #e8f0fe; font-weight: bold; font-size: 1.2em; color: #1a73e8; text-align: right; padding-right: 20px !important; }
+        
         .loading-msg { text-align: center; font-weight: bold; padding: 20px; color: #666; }
         .suggestion-box { background: #e8f0fe; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: center; }
     </style>
@@ -34,7 +38,7 @@
         <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה..." onkeyup="filterTables()">
         <div class="sort-options">
             <span>מיין לפי:</span>
-            <label><input type="radio" name="sortOrder" value="he" onclick="currentSort='he'; renderAll();"> א"ב עברי</label>
+            <label><input type="radio" name="sortOrder" value="he" checked onclick="currentSort='he'; renderAll();"> א"ב עברי</label>
             <label><input type="radio" name="sortOrder" value="en" onclick="currentSort='en'; renderAll();"> A-Z (אנגלי)</label>
         </div>
     </div>
@@ -71,39 +75,60 @@
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
     
     let allData = [];
-    let currentSort = null;
+    let currentSort = 'he'; // ברירת מחדל עברית
 
     async function fetchData() {
         try {
             const response = await fetch(CSV_URL);
             const text = await response.text();
-            const rows = text.split('\n').slice(1); // דלג על כותרות
+            const rows = text.split('\n').slice(1);
             allData = rows.map(row => {
                 const cols = row.split(',').map(c => c.replace(/"/g, '').trim());
                 return { he: cols[0], en: cols[1], type: cols[2], stars: cols[3] };
-            });
+            }).filter(item => item.he); // מסנן שורות ריקות
+            
             document.getElementById('loading').style.display = 'none';
             renderAll();
         } catch (e) {
-            document.getElementById('loading').innerText = "שגיאה בטעינת נתונים. וודא שהטבלה ציבורית.";
+            document.getElementById('loading').innerText = "שגיאה בטעינת נתונים.";
         }
     }
 
     function renderAll() {
         const tables = { 'א': 'tableA', 'ב': 'tableB', 'ג1': 'tableC1', 'ג2': 'tableC2', 'ג3': 'tableC3' };
-        Object.values(tables).forEach(id => document.querySelector(`#${id} tbody`).innerHTML = '');
+        Object.values(tables).forEach(id => {
+            const tb = document.querySelector(`#${id} tbody`);
+            if(tb) tb.innerHTML = '';
+        });
 
-        let filtered = [...allData];
-        if (currentSort) {
-            filtered.sort((a, b) => a[currentSort].localeCompare(b[currentSort], currentSort === 'he' ? 'he' : 'en'));
-        }
+        // מיון הנתונים
+        let sorted = [...allData].sort((a, b) => 
+            a[currentSort].localeCompare(b[currentSort], currentSort === 'he' ? 'he' : 'en')
+        );
 
-        filtered.forEach(item => {
-            let tableId = tables[item.type];
-            if (item.type === 'ג') tableId = tables['ג' + item.stars];
+        // אובייקט למעקב אחרי האות האחרונה בכל טבלה
+        let lastLetters = {};
+
+        sorted.forEach(item => {
+            let tableKey = item.type === 'ג' ? 'ג' + item.stars : item.type;
+            let tableId = tables[tableKey];
+            
             if (tableId) {
-                const row = `<tr><td>${item.he}</td><td>${item.en}</td></tr>`;
-                document.querySelector(`#${tableId} tbody`).innerHTML += row;
+                const tbody = document.querySelector(`#${tableId} tbody`);
+                const currentWord = item[currentSort];
+                const firstLetter = currentWord.charAt(0).toUpperCase();
+
+                // הוספת כותרת אות אם היא השתנתה
+                if (lastLetters[tableId] !== firstLetter) {
+                    const divider = document.createElement('tr');
+                    divider.innerHTML = `<td colspan="2" class="letter-divider">${firstLetter}</td>`;
+                    tbody.appendChild(divider);
+                    lastLetters[tableId] = firstLetter;
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${item.he}</td><td>${item.en}</td>`;
+                tbody.appendChild(row);
             }
         });
     }
@@ -124,8 +149,13 @@
 
     function filterTables() {
         const query = document.getElementById('searchInput').value.toLowerCase();
+        // בחיפוש אנחנו מסתירים גם את הכותרות של האותיות כדי שלא יפריעו
         document.querySelectorAll("tbody tr").forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(query) ? "" : "none";
+            if (row.classList.contains('letter-divider')) {
+                row.style.display = query ? "none" : "";
+            } else {
+                row.style.display = row.innerText.toLowerCase().includes(query) ? "" : "none";
+            }
         });
     }
 
