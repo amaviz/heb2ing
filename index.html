@@ -6,18 +6,18 @@
     <title>ניהול רשימות - heb2ing</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #1a73e8; }
-        .controls { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .controls { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .search-area { width: 100%; max-width: 400px; display: flex; gap: 5px; align-items: center; }
         .search-box { flex-grow: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #ccc; font-size: 16px; outline: none; }
         
-        .filter-options { display: flex; gap: 8px; margin-top: 10px; }
-        .filter-btn { padding: 6px 15px; border: 1px solid #1a73e8; background: white; color: #1a73e8; border-radius: 15px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .filter-options { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+        .filter-btn { padding: 6px 12px; border: 1px solid #1a73e8; background: white; color: #1a73e8; border-radius: 15px; cursor: pointer; font-size: 13px; transition: 0.2s; }
         .filter-btn.active { background: #1a73e8; color: white; }
 
         .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-button, .sub-tab-button { padding: 10px 25px; cursor: pointer; border: none; background: #e0e0e0; border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 16px; }
+        .tab-button, .sub-tab-button { padding: 10px 20px; cursor: pointer; border: none; background: #e0e0e0; border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 15px; }
         .tab-button.active { background: #1a73e8; color: white; }
         .sub-tab-button.active { background: #fbbc05; color: black; }
         
@@ -26,7 +26,7 @@
         .tab-content.active, .sub-tab-content.active { display: block; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         .letter-divider { background-color: #e8f0fe; font-weight: bold; font-size: 1.2em; color: #1a73e8; padding: 8px 20px !important; }
         
         .info-tag { font-size: 0.75em; color: #777; display: block; margin-top: 3px; font-weight: normal; min-height: 1em; }
@@ -47,12 +47,14 @@
         </div>
         
         <div class="filter-options">
-            <button class="filter-btn active" onclick="setWordFilter('both', this)">הכל</button>
-            <button class="filter-btn" onclick="setWordFilter('word', this)">מילים בודדות</button>
-            <button class="filter-btn" onclick="setWordFilter('sentence', this)">משפטים</button>
+            <button class="filter-btn active" onclick="setWordFilter('all', this)">הכל</button>
+            <button class="filter-btn" onclick="setWordFilter('word_only', this)">מילים בודדות</button>
+            <button class="filter-btn" onclick="setWordFilter('sent_he', this)">משפט בעברית</button>
+            <button class="filter-btn" onclick="setWordFilter('sent_en', this)">משפט באנגלית</button>
+            <button class="filter-btn" onclick="setWordFilter('sent_both', this)">משפט בשניהם</button>
         </div>
 
-        <div class="sort-options" style="margin-top: 10px;">
+        <div class="sort-options">
             <label><input type="radio" name="sortOrder" value="he" checked onclick="currentSort='he'; renderAll();"> א"ב עברי</label>
             <label><input type="radio" name="sortOrder" value="en" onclick="currentSort='en'; renderAll();"> A-Z (אנגלי)</label>
         </div>
@@ -133,7 +135,7 @@
     
     let allData = [];
     let currentSort = 'he';
-    let wordFilter = 'both'; // both, word, sentence
+    let wordFilter = 'all'; 
 
     async function fetchData() {
         try {
@@ -145,13 +147,12 @@
                 let rawType = cols[2] ? cols[2].replace('רשימה ', '').trim() : 'א';
                 let mappedType = rawType === 'א' ? 'A' : (rawType === 'ב' ? 'B' : 'C');
                 
-                // זיהוי אם זה משפט (רווח בעברית או באנגלית)
-                const isSentence = cols[0].includes(' ') || cols[1].includes(' ');
-
                 return { 
-                    he: cols[0] || '', en: cols[1] || '', 
+                    he: cols[0] || '', 
+                    en: cols[1] || '', 
                     type: mappedType, rawHeb: rawType, stars: cols[3] || '3',
-                    isSentence: isSentence
+                    hasSpaceHe: cols[0].trim().includes(' '),
+                    hasSpaceEn: cols[1].trim().includes(' ')
                 };
             }).filter(item => item.he !== '');
             document.getElementById('loading').style.display = 'none';
@@ -183,6 +184,7 @@
                 if (lastLetters[key] !== firstLetter) {
                     const div = document.createElement('tr');
                     div.className = 'letter-row';
+                    div.setAttribute('data-letter', firstLetter);
                     div.innerHTML = `<td colspan="2" class="letter-divider ${currentSort === 'he' ? 'text-right' : 'text-left'}">${firstLetter}</td>`;
                     tbody.appendChild(div);
                     lastLetters[key] = firstLetter;
@@ -191,10 +193,11 @@
                 const tr = document.createElement('tr');
                 tr.className = 'data-row';
                 tr.setAttribute('data-parent-id', key);
-                tr.setAttribute('data-is-sentence', item.isSentence);
-                tr.setAttribute('data-list', item.type);
+                tr.setAttribute('data-space-he', item.hasSpaceHe);
+                tr.setAttribute('data-space-en', item.hasSpaceEn);
                 tr.setAttribute('data-heb-type', item.rawHeb);
                 tr.setAttribute('data-stars', item.stars);
+                tr.setAttribute('data-belongs-to-letter', firstLetter);
                 
                 tr.innerHTML = `<td><span class="word-text">${item.he}</span><span class="info-tag"></span></td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
@@ -209,28 +212,32 @@
         let currentVisibleId = activeSubTab ? activeSubTab.id : "";
         let visibleRowsCount = 0;
 
+        // שלב 1: סינון שורות הנתונים
         document.querySelectorAll(".data-row").forEach(r => {
             const wordText = r.querySelector('.word-text').innerText.toLowerCase();
             const translationText = r.cells[1].innerText.toLowerCase();
             const rowParentId = r.getAttribute('data-parent-id');
-            const isSentence = r.getAttribute('data-is-sentence') === 'true';
+            const spaceHe = r.getAttribute('data-space-he') === 'true';
+            const spaceEn = r.getAttribute('data-space-en') === 'true';
             
-            const matchesQ = wordText.includes(q) || translationText.includes(q);
+            const matchesSearch = wordText.includes(q) || translationText.includes(q);
             const isVisibleTable = (rowParentId === currentVisibleId);
             
-            // סינון מילים/משפטים
-            let matchesType = true;
-            if (wordFilter === 'word') matchesType = !isSentence;
-            else if (wordFilter === 'sentence') matchesType = isSentence;
+            // לוגיקת כפתורי הסינון החדשה
+            let matchesFilter = true;
+            if (wordFilter === 'word_only') matchesFilter = (!spaceHe && !spaceEn);
+            else if (wordFilter === 'sent_he') matchesFilter = spaceHe;
+            else if (wordFilter === 'sent_en') matchesFilter = spaceEn;
+            else if (wordFilter === 'sent_both') matchesFilter = (spaceHe && spaceEn);
 
-            if (matchesQ && isVisibleTable && matchesType) {
+            if (matchesSearch && isVisibleTable && matchesFilter) {
                 r.style.display = "";
                 visibleRowsCount++;
             } else {
                 r.style.display = "none";
             }
 
-            // עדכון תגיות מידע
+            // תגיות מידע
             const infoTag = r.querySelector('.info-tag');
             const hebType = r.getAttribute('data-heb-type');
             const stars = r.getAttribute('data-stars');
@@ -243,12 +250,24 @@
             }
         });
         
-        document.querySelectorAll(".letter-row").forEach(d => {
-            const parentId = d.parentElement.parentElement.id.replace('table','');
-            d.style.display = (q === "" && parentId === currentVisibleId) ? "" : "none";
+        // שלב 2: טיפול באותיות הגדולות - להעלים אם אין תחתיהן שורות גלויות
+        document.querySelectorAll(".letter-row").forEach(letterRow => {
+            const parentTableBody = letterRow.parentElement;
+            const parentTableId = parentTableBody.parentElement.id.replace('table','');
+            
+            if (parentTableId !== currentVisibleId) {
+                letterRow.style.display = "none";
+                return;
+            }
+
+            // מחפשים אם יש שורה גלויה ששייכת לאות הזו
+            const letter = letterRow.getAttribute('data-letter');
+            const hasVisibleData = !!parentTableBody.querySelector(`.data-row[data-belongs-to-letter="${letter}"]:not([style*="display: none"])`);
+            
+            letterRow.style.display = hasVisibleData ? "" : "none";
         });
 
-        document.getElementById('noResults').style.display = (visibleRowsCount === 0 && (q !== "" || wordFilter !== 'both')) ? "block" : "none";
+        document.getElementById('noResults').style.display = (visibleRowsCount === 0 && (q !== "" || wordFilter !== 'all')) ? "block" : "none";
     }
 
     function openTab(e, id) {
