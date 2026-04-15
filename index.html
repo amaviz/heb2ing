@@ -9,9 +9,8 @@
         .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #1a73e8; }
         .controls { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .search-area { width: 100%; max-width: 650px; display: flex; gap: 5px; align-items: center; }
-        .search-box { flex-grow: 1; padding: 10px 15px; border-radius: 20px 0 0 20px; border: 1px solid #ccc; font-size: 16px; outline: none; border-left: none; }
-        .search-select { padding: 10px; border-radius: 0 20px 20px 0; border: 1px solid #ccc; background: #f8f9fa; cursor: pointer; font-size: 14px; outline: none; min-width: 160px; }
+        .search-area { width: 100%; max-width: 400px; display: flex; gap: 5px; align-items: center; }
+        .search-box { flex-grow: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #ccc; font-size: 16px; outline: none; }
         
         .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-button, .sub-tab-button { padding: 10px 25px; cursor: pointer; border: none; background: #e0e0e0; border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 16px; }
@@ -28,11 +27,7 @@
         .text-right { text-align: right; }
         .text-left { text-align: left; }
         
-        /* עיצוב תגית המידע */
         .info-tag { font-size: 0.75em; color: #777; display: block; margin-top: 3px; font-weight: normal; min-height: 1em; }
-        
-        .search-mode .tab-content, .search-mode .sub-tab-content { display: block !important; }
-        .search-mode .tabs, .search-mode .sub-tabs { display: none !important; }
         .loading-msg { text-align: center; font-weight: bold; padding: 20px; }
     </style>
 </head>
@@ -43,12 +38,7 @@
 
     <div class="controls">
         <div class="search-area">
-            <select id="searchScope" class="search-select" onchange="filterTables()">
-                <option value="all">חיפוש בכל המילים</option>
-                <option value="list">חיפוש ברשימה זו (כל הכוכבים)</option>
-                <option value="current">חיפוש בדירוג הספציפי</option>
-            </select>
-            <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה..." onkeyup="filterTables()">
+            <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה ברשימה זו..." onkeyup="filterTables()">
         </div>
         <div class="sort-options">
             <label><input type="radio" name="sortOrder" value="he" checked onclick="currentSort='he'; renderAll();"> א"ב עברי</label>
@@ -108,7 +98,7 @@
         </div>
     </div>
 
-    <div id="loading" class="loading-msg">טוען נתונים...</div>
+    <div id="loading" class="loading-msg">טוען נתונים מהטבלה...</div>
 </div>
 
 <script>
@@ -117,7 +107,6 @@
     
     let allData = [];
     let currentSort = 'he';
-    let activeMainTab = 'A';
 
     async function fetchData() {
         try {
@@ -164,7 +153,7 @@
                 tr.className = 'data-row';
                 tr.setAttribute('data-list', item.type);
                 tr.setAttribute('data-stars', item.stars);
-                tr.setAttribute('data-full-id', key);
+                tr.setAttribute('data-parent-id', key);
                 
                 tr.innerHTML = `<td><span class="word-text">${item.he}</span><span class="info-tag"></span></td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
@@ -175,48 +164,48 @@
 
     function filterTables() {
         const q = document.getElementById('searchInput').value.toLowerCase();
-        const scope = document.getElementById('searchScope').value;
         const activeSubTab = document.querySelector('.tab-content.active .sub-tab-content.active');
-        const activeSubId = activeSubTab ? activeSubTab.id : 'GlobalALL';
-        const wrapper = document.getElementById('navigation-wrapper');
+        const activeMainTabContent = document.querySelector('.tab-content.active');
         
-        if (q) wrapper.classList.add('search-mode'); else wrapper.classList.remove('search-mode');
+        // מזהה את ה-ID של הטבלה שמוצגת כרגע
+        let currentVisibleId = "";
+        if (activeMainTabContent && activeMainTabContent.id === 'listALL') {
+            currentVisibleId = "GlobalALL";
+        } else if (activeSubTab) {
+            currentVisibleId = activeSubTab.id;
+        }
 
         document.querySelectorAll(".data-row").forEach(r => {
-            const listType = r.getAttribute('data-list');
-            const stars = r.getAttribute('data-stars');
-            const fullId = r.getAttribute('data-full-id');
-            const infoTag = r.querySelector('.info-tag');
             const wordText = r.querySelector('.word-text').innerText.toLowerCase();
             const translationText = r.cells[1].innerText.toLowerCase();
-            
+            const rowParentId = r.getAttribute('data-parent-id');
+            const listType = r.getAttribute('data-list');
+            const stars = r.getAttribute('data-stars');
+            const infoTag = r.querySelector('.info-tag');
+
             const matchesQ = wordText.includes(q) || translationText.includes(q);
-            let matchesScope = false;
+            const isVisibleTable = (rowParentId === currentVisibleId);
 
-            // לוגיקת טווח חיפוש
-            if (scope === 'all') matchesScope = true;
-            else if (scope === 'list') matchesScope = (listType === activeMainTab);
-            else matchesScope = (fullId === activeSubId);
+            r.style.display = (matchesQ && isVisibleTable) ? "" : "none";
 
-            r.style.display = (matchesQ && matchesScope) ? "" : "none";
-
-            // לוגיקת הצגת תגיות (מתחת למילה)
-            if (q) {
-                if (scope === 'all') infoTag.innerText = `${listType === 'A'?'א':listType==='B'?'ב':'ג'} - ★${stars}`;
-                else if (scope === 'list') infoTag.innerText = `★${stars}`;
-                else infoTag.innerText = "";
+            // הצגת תגיות רק בטאבים של "הכל"
+            if (currentVisibleId === 'GlobalALL') {
+                infoTag.innerText = `${listType === 'A'?'א':listType==='B'?'ב':'ג'} - ★${stars}`;
+            } else if (currentVisibleId.includes('_ALL')) {
+                infoTag.innerText = `★${stars}`;
             } else {
-                // מצב לא חיפוש: כפתורי "הכל"
-                if (activeMainTab === 'ALL') infoTag.innerText = `${listType === 'A'?'א':listType==='B'?'ב':'ג'} - ★${stars}`;
-                else if (activeSubId.includes('_ALL')) infoTag.innerText = `★${stars}`;
-                else infoTag.innerText = "";
+                infoTag.innerText = "";
             }
         });
-        document.querySelectorAll(".letter-row").forEach(d => d.style.display = q ? "none" : "");
+        
+        document.querySelectorAll(".letter-row").forEach(d => {
+            // האות הגדולה מוצגת רק אם אנחנו לא בחיפוש או אם היא שייכת לטבלה הפעילה
+            const parentId = d.parentElement.parentElement.id.replace('table','');
+            d.style.display = (q === "" && parentId === currentVisibleId) ? "" : "none";
+        });
     }
 
     function openTab(e, id) {
-        activeMainTab = id.replace('list', '');
         document.querySelectorAll(".tab-content, .tab-button").forEach(x => x.classList.remove("active"));
         document.getElementById(id).classList.add("active");
         e.currentTarget.classList.add("active");
