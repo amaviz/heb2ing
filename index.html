@@ -26,15 +26,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
         .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
-        /* Top Bar - Fixed positions */
-        .top-bar { 
-            display: flex !important; 
-            justify-content: space-between !important; 
-            flex-direction: row !important; 
-            direction: ltr !important; /* Forces buttons to stay in place regardless of HTML dir */
-            margin-bottom: 15px; 
-        }
-        
+        .top-bar { display: flex !important; justify-content: space-between !important; flex-direction: row !important; direction: ltr !important; margin-bottom: 15px; }
         .top-btn { padding: 8px 15px; cursor: pointer; border-radius: 20px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); font-weight: bold; transition: 0.3s; }
         .top-btn:hover { background: var(--primary-blue); color: white; }
 
@@ -44,8 +36,8 @@
         .search-box { flex-grow: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background: var(--container-bg); color: var(--text-color); }
         
         .filter-options { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-        .filter-btn { padding: 6px 12px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); border-radius: 15px; cursor: pointer; font-size: 13px; transition: 0.2s; }
-        .filter-btn.active { background: var(--primary-blue); color: white; }
+        .filter-btn { padding: 6px 14px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); border-radius: 15px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; }
+        .filter-btn.active { background: var(--primary-blue); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
         .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-button, .sub-tab-button { padding: 10px 20px; cursor: pointer; border: none; background: var(--tab-bg); color: var(--text-color); border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 15px; }
@@ -84,11 +76,11 @@
         </div>
         
         <div class="filter-options">
-            <button class="filter-btn active" id="btn_all" onclick="setWordFilter('all', this)">הכל</button>
-            <button class="filter-btn" id="btn_word" onclick="setWordFilter('word_only', this)">מילים בודדות</button>
-            <button class="filter-btn" id="btn_sent_he" onclick="setWordFilter('sent_he', this)">משפט בעברית</button>
-            <button class="filter-btn" id="btn_sent_en" onclick="setWordFilter('sent_en', this)">משפט באנגלית</button>
-            <button class="filter-btn" id="btn_sent_both" onclick="setWordFilter('sent_both', this)">משפט בשניהם</button>
+            <button class="filter-btn active" id="btn_all" onclick="toggleWordFilter('all', this)">הכל</button>
+            <button class="filter-btn" id="btn_word" onclick="toggleWordFilter('word_only', this)">מילים בודדות</button>
+            <button class="filter-btn" id="btn_sent_he" onclick="toggleWordFilter('sent_he', this)">משפט בעברית</button>
+            <button class="filter-btn" id="btn_sent_en" onclick="toggleWordFilter('sent_en', this)">משפט באנגלית</button>
+            <button class="filter-btn" id="btn_sent_both" onclick="toggleWordFilter('sent_both', this)">משפט בשניהם</button>
         </div>
 
         <div class="sort-options">
@@ -98,7 +90,7 @@
     </div>
 
     <div id="navigation-wrapper">
-        <div class="tabs" id="mainTabs">
+        <div class="tabs">
             <button class="tab-button active" onclick="openTab(event, 'listA')" id="tabA">רשימה א'</button>
             <button class="tab-button" onclick="openTab(event, 'listB')" id="tabB">רשימה ב'</button>
             <button class="tab-button" onclick="openTab(event, 'listC')" id="tabC">רשימה ג'</button>
@@ -125,84 +117,40 @@
     
     let allData = [];
     let currentSort = 'he';
-    let wordFilter = 'all'; 
+    let selectedFilters = new Set(['all']); 
     let currentLang = 'he';
 
     const trans = {
-        he: {
-            title: "ניהול רשימות heb2ing",
-            search: "חפש מילה ברשימה זו...",
-            all: "הכל",
-            word_only: "מילים בודדות",
-            sent_he: "משפט בעברית",
-            sent_en: "משפט באנגלית",
-            sent_both: "משפט בשניהם",
-            sort_he: 'א"ב עברי',
-            sort_en: "A-Z (אנגלי)",
-            tabA: "רשימה א'",
-            tabB: "רשימה ב'",
-            tabC: "רשימה ג'",
-            tabAll: "כל המילים",
-            loading: "טוען נתונים...",
-            no_results: "לא נמצאה מילה מתאימה",
-            stars_all: "הכל",
-            list_prefix: "רשימה"
-        },
-        en: {
-            title: "List Management heb2ing",
-            search: "Search word in this list...",
-            all: "All",
-            word_only: "Single Words",
-            sent_he: "Sentence (Heb)",
-            sent_en: "Sentence (Eng)",
-            sent_both: "Sentence (Both)",
-            sort_he: "Hebrew A-B",
-            sort_en: "English A-Z",
-            tabA: "List A",
-            tabB: "List B",
-            tabC: "List C",
-            tabAll: "All Words",
-            loading: "Loading data...",
-            no_results: "No matching words found",
-            stars_all: "All",
-            list_prefix: "List"
-        }
+        he: { title: "ניהול רשימות heb2ing", search: "חפש מילה ברשימה זו...", all: "הכל", word_only: "מילים בודדות", sent_he: "משפט בעברית", sent_en: "משפט באנגלית", sent_both: "משפט בשניהם", sort_he: 'א"ב עברי', sort_en: "A-Z (אנגלי)", tabA: "רשימה א'", tabB: "רשימה ב'", tabC: "רשימה ג'", tabAll: "כל המילים", loading: "טוען נתונים...", no_results: "לא נמצאה מילה מתאימה", stars_all: "הכל", list_prefix: "רשימה" },
+        en: { title: "List Management heb2ing", search: "Search word in this list...", all: "All", word_only: "Single Words", sent_he: "Sentence (Heb)", sent_en: "Sentence (Eng)", sent_both: "Sentence (Both)", sort_he: "Hebrew A-B", sort_en: "English A-Z", tabA: "List A", tabB: "List B", tabC: "List C", tabAll: "All Words", loading: "Loading data...", no_results: "No matching words found", stars_all: "All", list_prefix: "List" }
     };
 
     function toggleLanguage() {
         currentLang = currentLang === 'he' ? 'en' : 'he';
-        const html = document.getElementById('mainHtml');
-        html.dir = currentLang === 'he' ? 'rtl' : 'ltr';
-        
+        document.getElementById('mainHtml').dir = currentLang === 'he' ? 'rtl' : 'ltr';
         document.getElementById('langBtn').innerText = currentLang === 'he' ? 'English' : 'עברית';
         document.getElementById('mainTitle').innerText = trans[currentLang].title;
         document.getElementById('searchInput').placeholder = trans[currentLang].search;
-        
-        document.getElementById('btn_all').innerText = trans[currentLang].all;
+        ['all', 'word', 'sent_he', 'sent_en', 'sent_both'].forEach(id => {
+            const el = document.getElementById('btn_' + id.replace('word','word'));
+            if(el) el.innerText = trans[currentLang][id === 'word' ? 'word_only' : id];
+        });
         document.getElementById('btn_word').innerText = trans[currentLang].word_only;
-        document.getElementById('btn_sent_he').innerText = trans[currentLang].sent_he;
-        document.getElementById('btn_sent_en').innerText = trans[currentLang].sent_en;
-        document.getElementById('btn_sent_both').innerText = trans[currentLang].sent_both;
-        
         document.getElementById('lbl_sort_he').innerText = trans[currentLang].sort_he;
         document.getElementById('lbl_sort_en').innerText = trans[currentLang].sort_en;
-        
         document.getElementById('tabA').innerText = trans[currentLang].tabA;
         document.getElementById('tabB').innerText = trans[currentLang].tabB;
         document.getElementById('tabC').innerText = trans[currentLang].tabC;
         document.getElementById('tabAll').innerText = trans[currentLang].tabAll;
-        
         document.getElementById('loading').innerText = trans[currentLang].loading;
         document.getElementById('noResults').innerText = trans[currentLang].no_results;
-
-        setupTabs(); // Re-render tab headers (Stars/All)
+        setupTabs();
         renderAll();
     }
 
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+        document.getElementById('themeBtn').innerText = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
     }
 
     async function fetchData() {
@@ -231,43 +179,55 @@
             const content = document.querySelector(`#list${l} .sub-contents`);
             const prefix = l === 'ALL' ? 'ALL' : l;
             const allId = l === 'ALL' ? 'GlobalALL' : l + '_ALL';
-
-            container.innerHTML = `
-                <div class="sub-tabs">
-                    <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}1')">★ 1</button>
-                    <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}2')">★★ 2</button>
-                    <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}3')">★★★ 3</button>
-                    <button class="sub-tab-button active" onclick="openSubTab(event, '${allId}')">${trans[currentLang].stars_all}</button>
-                </div>`;
-            content.innerHTML = `
-                <div id="${prefix}1" class="sub-tab-content"><table id="table${prefix}1"><tbody></tbody></table></div>
+            container.innerHTML = `<div class="sub-tabs">
+                <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}1')">★ 1</button>
+                <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}2')">★★ 2</button>
+                <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}3')">★★★ 3</button>
+                <button class="sub-tab-button active" onclick="openSubTab(event, '${allId}')">${trans[currentLang].stars_all}</button>
+            </div>`;
+            content.innerHTML = `<div id="${prefix}1" class="sub-tab-content"><table id="table${prefix}1"><tbody></tbody></table></div>
                 <div id="${prefix}2" class="sub-tab-content"><table id="table${prefix}2"><tbody></tbody></table></div>
                 <div id="${prefix}3" class="sub-tab-content"><table id="table${prefix}3"><tbody></tbody></table></div>
-                <div id="${allId}" class="sub-tab-content active"><table id="table${allId}"><tbody></tbody></table></div>
-            `;
+                <div id="${allId}" class="sub-tab-content active"><table id="table${allId}"><tbody></tbody></table></div>`;
         });
     }
 
-    function setWordFilter(type, btn) {
-        wordFilter = type;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    function toggleWordFilter(type, btn) {
+        if (type === 'all') {
+            selectedFilters.clear();
+            selectedFilters.add('all');
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        } else {
+            selectedFilters.delete('all');
+            document.getElementById('btn_all').classList.remove('active');
+            
+            if (selectedFilters.has(type)) {
+                selectedFilters.delete(type);
+                btn.classList.remove('active');
+            } else {
+                selectedFilters.add(type);
+                btn.classList.add('active');
+            }
+            
+            if (selectedFilters.size === 0) {
+                selectedFilters.add('all');
+                document.getElementById('btn_all').classList.add('active');
+            }
+        }
         filterTables();
     }
 
     function renderAll() {
         const tableIds = ['A1','A2','A3','A_ALL','B1','B2','B3','B_ALL','C1','C2','C3','C_ALL','ALL1','ALL2','ALL3','GlobalALL'];
         tableIds.forEach(id => { const el = document.querySelector(`#table${id} tbody`); if(el) el.innerHTML = ''; });
-
         let sorted = [...allData].sort((a, b) => a[currentSort].localeCompare(b[currentSort], currentLang === 'he' ? 'he' : 'en'));
         let lastLetters = {};
-
         sorted.forEach(item => {
             const keys = [item.type + item.stars, item.type + '_ALL', 'ALL' + item.stars, 'GlobalALL'];
             keys.forEach(key => {
                 const tbody = document.querySelector(`#table${key} tbody`);
                 if (!tbody) return;
-
                 const firstChar = item[currentSort].charAt(0).toUpperCase();
                 if (lastLetters[key] !== firstChar) {
                     const tr = document.createElement('tr');
@@ -277,7 +237,6 @@
                     tbody.appendChild(tr);
                     lastLetters[key] = firstChar;
                 }
-
                 const tr = document.createElement('tr');
                 tr.className = 'data-row';
                 tr.setAttribute('data-parent-id', key);
@@ -302,26 +261,25 @@
 
         document.querySelectorAll(".data-row").forEach(r => {
             const isVisibleTable = (r.getAttribute('data-parent-id') === currentVisibleId);
-            const matchesSearch = r.innerText.toLowerCase().includes(q);
             const spaceHe = r.getAttribute('data-space-he') === 'true';
             const spaceEn = r.getAttribute('data-space-en') === 'true';
             
-            let matchesFilter = true;
-            if (wordFilter === 'word_only') matchesFilter = (!spaceHe && !spaceEn);
-            else if (wordFilter === 'sent_he') matchesFilter = spaceHe;
-            else if (wordFilter === 'sent_en') matchesFilter = spaceEn;
-            else if (wordFilter === 'sent_both') matchesFilter = (spaceHe && spaceEn);
+            let matchesType = selectedFilters.has('all');
+            if (!matchesType) {
+                if (selectedFilters.has('word_only') && (!spaceHe && !spaceEn)) matchesType = true;
+                if (selectedFilters.has('sent_he') && spaceHe) matchesType = true;
+                if (selectedFilters.has('sent_en') && spaceEn) matchesType = true;
+                if (selectedFilters.has('sent_both') && (spaceHe && spaceEn)) matchesType = true;
+            }
 
-            if (matchesSearch && isVisibleTable && matchesFilter) {
+            if (r.innerText.toLowerCase().includes(q) && isVisibleTable && matchesType) {
                 r.style.display = "";
                 count++;
                 const infoTag = r.querySelector('.info-tag');
                 const listName = currentLang === 'he' ? r.getAttribute('data-raw-letter') : r.getAttribute('data-type');
-                const stars = r.getAttribute('data-stars');
-                
-                if (currentVisibleId === 'GlobalALL') infoTag.innerText = `${trans[currentLang].list_prefix} ${listName} - ★${stars}`;
+                if (currentVisibleId === 'GlobalALL') infoTag.innerText = `${trans[currentLang].list_prefix} ${listName} - ★${r.getAttribute('data-stars')}`;
                 else if (currentVisibleId.startsWith('ALL')) infoTag.innerText = `${trans[currentLang].list_prefix} ${listName}`;
-                else if (currentVisibleId.includes('_ALL')) infoTag.innerText = `★${stars}`;
+                else if (currentVisibleId.includes('_ALL')) infoTag.innerText = `★${r.getAttribute('data-stars')}`;
                 else infoTag.innerText = "";
             } else { r.style.display = "none"; }
         });
@@ -332,7 +290,7 @@
             const hasVisible = !!tbody.querySelector(`.data-row[data-belongs-to-letter="${lr.getAttribute('data-letter')}"]:not([style*="display: none"])`);
             lr.style.display = hasVisible ? "" : "none";
         });
-        document.getElementById('noResults').style.display = (count === 0 && (q !== "" || wordFilter !== 'all')) ? "block" : "none";
+        document.getElementById('noResults').style.display = (count === 0 && (q !== "" || !selectedFilters.has('all'))) ? "block" : "none";
     }
 
     function openTab(e, id) {
