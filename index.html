@@ -12,25 +12,28 @@
         .search-area { width: 100%; max-width: 650px; display: flex; gap: 5px; align-items: center; }
         .search-box { flex-grow: 1; padding: 10px 15px; border-radius: 20px 0 0 20px; border: 1px solid #ccc; font-size: 16px; outline: none; border-left: none; }
         .search-select { padding: 10px; border-radius: 0 20px 20px 0; border: 1px solid #ccc; background: #f8f9fa; cursor: pointer; font-size: 14px; outline: none; min-width: 160px; }
+        
         .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-button, .sub-tab-button { padding: 10px 25px; cursor: pointer; border: none; background: #e0e0e0; border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 16px; }
         .tab-button.active { background: #1a73e8; color: white; }
-        .sub-tabs { margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px; }
-        .sub-tab-button { font-size: 14px; padding: 8px 15px; background: #f0f0f0; color: #555; }
         .sub-tab-button.active { background: #fbbc05; color: black; }
+        
+        .sub-tabs { margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px; }
         .tab-content, .sub-tab-content { display: none; }
         .tab-content.active, .sub-tab-content.active { display: block; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         .letter-divider { background-color: #e8f0fe; font-weight: bold; font-size: 1.2em; color: #1a73e8; padding: 8px 20px !important; }
         .text-right { text-align: right; }
         .text-left { text-align: left; }
-        .info-tag { font-size: 0.8em; color: #666; font-weight: normal; display: block; margin-top: 4px; background: #f0f0f0; border-radius: 4px; padding: 2px; }
-        .loading-msg { text-align: center; font-weight: bold; padding: 20px; color: #666; }
         
-        /* עיצוב למצב חיפוש */
+        /* עיצוב תגית המידע */
+        .info-tag { font-size: 0.75em; color: #777; display: block; margin-top: 3px; font-weight: normal; min-height: 1em; }
+        
         .search-mode .tab-content, .search-mode .sub-tab-content { display: block !important; }
         .search-mode .tabs, .search-mode .sub-tabs { display: none !important; }
+        .loading-msg { text-align: center; font-weight: bold; padding: 20px; }
     </style>
 </head>
 <body>
@@ -48,7 +51,6 @@
             <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה..." onkeyup="filterTables()">
         </div>
         <div class="sort-options">
-            <span>מיין לפי:</span>
             <label><input type="radio" name="sortOrder" value="he" checked onclick="currentSort='he'; renderAll();"> א"ב עברי</label>
             <label><input type="radio" name="sortOrder" value="en" onclick="currentSort='en'; renderAll();"> A-Z (אנגלי)</label>
         </div>
@@ -59,6 +61,7 @@
             <button class="tab-button active" onclick="openTab(event, 'listA')">רשימה א'</button>
             <button class="tab-button" onclick="openTab(event, 'listB')">רשימה ב'</button>
             <button class="tab-button" onclick="openTab(event, 'listC')">רשימה ג'</button>
+            <button class="tab-button" onclick="openTab(event, 'listALL')">כל המילים</button>
         </div>
 
         <div id="listA" class="tab-content active">
@@ -66,10 +69,12 @@
                 <button class="sub-tab-button" onclick="openSubTab(event, 'A1')">★ 1</button>
                 <button class="sub-tab-button" onclick="openSubTab(event, 'A2')">★★ 2</button>
                 <button class="sub-tab-button active" onclick="openSubTab(event, 'A3')">★★★ 3</button>
+                <button class="sub-tab-button" onclick="openSubTab(event, 'A_ALL')">הכל</button>
             </div>
             <div id="A1" class="sub-tab-content"><table id="tableA1"><tbody></tbody></table></div>
             <div id="A2" class="sub-tab-content"><table id="tableA2"><tbody></tbody></table></div>
             <div id="A3" class="sub-tab-content active"><table id="tableA3"><tbody></tbody></table></div>
+            <div id="A_ALL" class="sub-tab-content"><table id="tableA_ALL"><tbody></tbody></table></div>
         </div>
 
         <div id="listB" class="tab-content">
@@ -77,10 +82,12 @@
                 <button class="sub-tab-button" onclick="openSubTab(event, 'B1')">★ 1</button>
                 <button class="sub-tab-button" onclick="openSubTab(event, 'B2')">★★ 2</button>
                 <button class="sub-tab-button active" onclick="openSubTab(event, 'B3')">★★★ 3</button>
+                <button class="sub-tab-button" onclick="openSubTab(event, 'B_ALL')">הכל</button>
             </div>
             <div id="B1" class="sub-tab-content"><table id="tableB1"><tbody></tbody></table></div>
             <div id="B2" class="sub-tab-content"><table id="tableB2"><tbody></tbody></table></div>
             <div id="B3" class="sub-tab-content active"><table id="tableB3"><tbody></tbody></table></div>
+            <div id="B_ALL" class="sub-tab-content"><table id="tableB_ALL"><tbody></tbody></table></div>
         </div>
 
         <div id="listC" class="tab-content">
@@ -88,15 +95,20 @@
                 <button class="sub-tab-button" onclick="openSubTab(event, 'C1')">★ 1</button>
                 <button class="sub-tab-button" onclick="openSubTab(event, 'C2')">★★ 2</button>
                 <button class="sub-tab-button active" onclick="openSubTab(event, 'C3')">★★★ 3</button>
+                <button class="sub-tab-button" onclick="openSubTab(event, 'C_ALL')">הכל</button>
             </div>
             <div id="C1" class="sub-tab-content"><table id="tableC1"><tbody></tbody></table></div>
             <div id="C2" class="sub-tab-content"><table id="tableC2"><tbody></tbody></table></div>
             <div id="C3" class="sub-tab-content active"><table id="tableC3"><tbody></tbody></table></div>
+            <div id="C_ALL" class="sub-tab-content"><table id="tableC_ALL"><tbody></tbody></table></div>
+        </div>
+
+        <div id="listALL" class="tab-content">
+            <table id="tableGlobalALL"><tbody></tbody></table>
         </div>
     </div>
 
     <div id="loading" class="loading-msg">טוען נתונים...</div>
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" width="100%" height="500" frameborder="0" style="margin-top:30px; border-radius: 8px;"></iframe>
 </div>
 
 <script>
@@ -105,7 +117,7 @@
     
     let allData = [];
     let currentSort = 'he';
-    let activeMainTab = 'A'; 
+    let activeMainTab = 'A';
 
     async function fetchData() {
         try {
@@ -117,55 +129,46 @@
                 let rawType = cols[2] ? cols[2].replace('רשימה ', '').trim() : 'א';
                 let mappedType = rawType === 'א' ? 'A' : (rawType === 'ב' ? 'B' : 'C');
                 return { 
-                    he: cols[0] || '', 
-                    en: cols[1] || '', 
-                    type: mappedType,
-                    rawHebType: rawType,
-                    stars: cols[3] || '3' 
+                    he: cols[0] || '', en: cols[1] || '', 
+                    type: mappedType, rawHeb: rawType, stars: cols[3] || '3' 
                 };
             }).filter(item => item.he !== '');
-            
             document.getElementById('loading').style.display = 'none';
             renderAll();
-        } catch (e) {
-            document.getElementById('loading').innerText = "שגיאה בחיבור לנתונים.";
-        }
+        } catch (e) { document.getElementById('loading').innerText = "שגיאה בטעינה."; }
     }
 
     function renderAll() {
-        const tableIds = ['A1','A2','A3','B1','B2','B3','C1','C2','C3'];
-        tableIds.forEach(id => {
-            const el = document.querySelector(`#table${id} tbody`);
-            if(el) el.innerHTML = '';
-        });
+        const tableIds = ['A1','A2','A3','A_ALL','B1','B2','B3','B_ALL','C1','C2','C3','C_ALL','GlobalALL'];
+        tableIds.forEach(id => { const el = document.querySelector(`#table${id} tbody`); if(el) el.innerHTML = ''; });
 
         let sorted = [...allData].sort((a, b) => a[currentSort].localeCompare(b[currentSort], currentSort === 'he' ? 'he' : 'en'));
         let lastLetters = {};
 
         sorted.forEach(item => {
-            let tableKey = item.type + item.stars;
-            let tbody = document.querySelector(`#table${tableKey} tbody`);
-            
-            if (tbody) {
+            const keys = [item.type + item.stars, item.type + '_ALL', 'GlobalALL'];
+            keys.forEach(key => {
+                const tbody = document.querySelector(`#table${key} tbody`);
+                if (!tbody) return;
+
                 const firstLetter = item[currentSort].charAt(0).toUpperCase();
-                if (lastLetters[tableKey] !== firstLetter) {
+                if (lastLetters[key] !== firstLetter) {
                     const div = document.createElement('tr');
                     div.className = 'letter-row';
                     div.innerHTML = `<td colspan="2" class="letter-divider ${currentSort === 'he' ? 'text-right' : 'text-left'}">${firstLetter}</td>`;
                     tbody.appendChild(div);
-                    lastLetters[tableKey] = firstLetter;
+                    lastLetters[key] = firstLetter;
                 }
+
                 const tr = document.createElement('tr');
                 tr.className = 'data-row';
                 tr.setAttribute('data-list', item.type);
                 tr.setAttribute('data-stars', item.stars);
-                tr.setAttribute('data-full-id', tableKey);
+                tr.setAttribute('data-full-id', key);
                 
-                // הוספת תגית מידע לחיפוש
-                const infoTag = `<span class="info-tag">${item.rawHebType} - ★${item.stars}</span>`;
-                tr.innerHTML = `<td>${item.he}${infoTag}</td><td>${item.en}</td>`;
+                tr.innerHTML = `<td><span class="word-text">${item.he}</span><span class="info-tag"></span></td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
-            }
+            });
         });
         filterTables();
     }
@@ -173,44 +176,48 @@
     function filterTables() {
         const q = document.getElementById('searchInput').value.toLowerCase();
         const scope = document.getElementById('searchScope').value;
-        const activeSubId = document.querySelector('.tab-content.active .sub-tab-content.active').id;
+        const activeSubTab = document.querySelector('.tab-content.active .sub-tab-content.active');
+        const activeSubId = activeSubTab ? activeSubTab.id : 'GlobalALL';
         const wrapper = document.getElementById('navigation-wrapper');
         
-        if (q) wrapper.classList.add('search-mode');
-        else wrapper.classList.remove('search-mode');
+        if (q) wrapper.classList.add('search-mode'); else wrapper.classList.remove('search-mode');
 
         document.querySelectorAll(".data-row").forEach(r => {
-            const text = r.innerText.toLowerCase();
             const listType = r.getAttribute('data-list');
             const stars = r.getAttribute('data-stars');
             const fullId = r.getAttribute('data-full-id');
             const infoTag = r.querySelector('.info-tag');
+            const wordText = r.querySelector('.word-text').innerText.toLowerCase();
+            const translationText = r.cells[1].innerText.toLowerCase();
             
-            const matchesQ = text.includes(q);
+            const matchesQ = wordText.includes(q) || translationText.includes(q);
             let matchesScope = false;
 
-            if (scope === 'all') {
-                matchesScope = true;
-                if(infoTag) infoTag.style.display = "block";
-            } else if (scope === 'list') {
-                matchesScope = (listType === activeMainTab);
-                if(infoTag) infoTag.innerHTML = `★${stars}`;
-                if(infoTag) infoTag.style.display = "block";
-            } else {
-                matchesScope = (fullId === activeSubId);
-                if(infoTag) infoTag.style.display = "none";
-            }
+            // לוגיקת טווח חיפוש
+            if (scope === 'all') matchesScope = true;
+            else if (scope === 'list') matchesScope = (listType === activeMainTab);
+            else matchesScope = (fullId === activeSubId);
 
             r.style.display = (matchesQ && matchesScope) ? "" : "none";
-        });
 
+            // לוגיקת הצגת תגיות (מתחת למילה)
+            if (q) {
+                if (scope === 'all') infoTag.innerText = `${listType === 'A'?'א':listType==='B'?'ב':'ג'} - ★${stars}`;
+                else if (scope === 'list') infoTag.innerText = `★${stars}`;
+                else infoTag.innerText = "";
+            } else {
+                // מצב לא חיפוש: כפתורי "הכל"
+                if (activeMainTab === 'ALL') infoTag.innerText = `${listType === 'A'?'א':listType==='B'?'ב':'ג'} - ★${stars}`;
+                else if (activeSubId.includes('_ALL')) infoTag.innerText = `★${stars}`;
+                else infoTag.innerText = "";
+            }
+        });
         document.querySelectorAll(".letter-row").forEach(d => d.style.display = q ? "none" : "");
     }
 
     function openTab(e, id) {
-        activeMainTab = id.replace('list', ''); // מעדכן איזו רשימה פעילה (A, B או C)
-        document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-        document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+        activeMainTab = id.replace('list', '');
+        document.querySelectorAll(".tab-content, .tab-button").forEach(x => x.classList.remove("active"));
         document.getElementById(id).classList.add("active");
         e.currentTarget.classList.add("active");
         filterTables();
@@ -219,8 +226,7 @@
     function openSubTab(e, id) {
         const p = e.currentTarget.parentElement;
         p.querySelectorAll(".sub-tab-button").forEach(b => b.classList.remove("active"));
-        const parentContent = p.parentElement;
-        parentContent.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active"));
+        p.parentElement.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active"));
         document.getElementById(id).classList.add("active");
         e.currentTarget.classList.add("active");
         filterTables();
