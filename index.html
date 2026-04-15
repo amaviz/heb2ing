@@ -144,26 +144,14 @@
     }
 
     function renderAll() {
-        const tableIds = [
-            'A1','A2','A3','A_ALL',
-            'B1','B2','B3','B_ALL',
-            'C1','C2','C3','C_ALL',
-            'ALL1','ALL2','ALL3','GlobalALL'
-        ];
+        const tableIds = ['A1','A2','A3','A_ALL','B1','B2','B3','B_ALL','C1','C2','C3','C_ALL','ALL1','ALL2','ALL3','GlobalALL'];
         tableIds.forEach(id => { const el = document.querySelector(`#table${id} tbody`); if(el) el.innerHTML = ''; });
 
         let sorted = [...allData].sort((a, b) => a[currentSort].localeCompare(b[currentSort], currentSort === 'he' ? 'he' : 'en'));
         let lastLetters = {};
 
         sorted.forEach(item => {
-            // רשימה של כל הטבלאות שהמילה צריכה להופיע בהן
-            const keys = [
-                item.type + item.stars, // למשל A3
-                item.type + '_ALL',      // למשל A_ALL
-                'ALL' + item.stars,     // למשל ALL3 (כוכב ספציפי בכל המילים)
-                'GlobalALL'             // הכל בכל המילים
-            ];
-
+            const keys = [item.type + item.stars, item.type + '_ALL', 'ALL' + item.stars, 'GlobalALL'];
             keys.forEach(key => {
                 const tbody = document.querySelector(`#table${key} tbody`);
                 if (!tbody) return;
@@ -182,6 +170,7 @@
                 tr.setAttribute('data-parent-id', key);
                 tr.setAttribute('data-list', item.type);
                 tr.setAttribute('data-stars', item.stars);
+                tr.setAttribute('data-heb-type', item.rawHeb);
                 
                 tr.innerHTML = `<td><span class="word-text">${item.he}</span><span class="info-tag"></span></td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
@@ -193,7 +182,6 @@
     function filterTables() {
         const q = document.getElementById('searchInput').value.toLowerCase();
         const activeSubTab = document.querySelector('.tab-content.active .sub-tab-content.active');
-        const activeMainTabContent = document.querySelector('.tab-content.active');
         
         let currentVisibleId = activeSubTab ? activeSubTab.id : "";
         let visibleRowsCount = 0;
@@ -203,6 +191,7 @@
             const translationText = r.cells[1].innerText.toLowerCase();
             const rowParentId = r.getAttribute('data-parent-id');
             const listType = r.getAttribute('data-list');
+            const hebType = r.getAttribute('data-heb-type');
             const stars = r.getAttribute('data-stars');
             const infoTag = r.querySelector('.info-tag');
 
@@ -216,9 +205,12 @@
                 r.style.display = "none";
             }
 
-            // עדכון תגיות מידע
-            if (currentVisibleId === 'GlobalALL' || currentVisibleId.startsWith('ALL')) {
-                infoTag.innerText = `${listType === 'A'?'א':listType==='B'?'ב':'ג'} - ★${stars}`;
+            // לוגיקת הצגת תגיות מעודכנת
+            if (currentVisibleId === 'GlobalALL') {
+                infoTag.innerText = `רשימה ${hebType} - ★${stars}`;
+            } else if (currentVisibleId.startsWith('ALL')) {
+                // כאן התיקון: כשבוחרים כוכבים ספציפיים בכל המילים - רואים רק את שם הרשימה
+                infoTag.innerText = `רשימה ${hebType}`;
             } else if (currentVisibleId.includes('_ALL')) {
                 infoTag.innerText = `★${stars}`;
             } else {
@@ -226,13 +218,11 @@
             }
         });
         
-        // הצגת/הסתרת אותיות ודיביידרים
         document.querySelectorAll(".letter-row").forEach(d => {
             const parentId = d.parentElement.parentElement.id.replace('table','');
             d.style.display = (q === "" && parentId === currentVisibleId) ? "" : "none";
         });
 
-        // הצגת הודעת "לא נמצא"
         document.getElementById('noResults').style.display = (visibleRowsCount === 0 && q !== "") ? "block" : "none";
     }
 
