@@ -24,11 +24,10 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         .letter-divider { background-color: #e8f0fe; font-weight: bold; font-size: 1.2em; color: #1a73e8; padding: 8px 20px !important; }
-        .text-right { text-align: right; }
-        .text-left { text-align: left; }
         
         .info-tag { font-size: 0.75em; color: #777; display: block; margin-top: 3px; font-weight: normal; min-height: 1em; }
-        .loading-msg { text-align: center; font-weight: bold; padding: 20px; }
+        .loading-msg, .no-results { text-align: center; font-weight: bold; padding: 20px; color: #666; }
+        .no-results { color: #d93025; font-size: 1.2em; display: none; }
         
         .form-container { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
     </style>
@@ -96,15 +95,25 @@
         </div>
 
         <div id="listALL" class="tab-content">
-            <table id="tableGlobalALL"><tbody></tbody></table>
+            <div class="sub-tabs">
+                <button class="sub-tab-button" onclick="openSubTab(event, 'ALL1')">★ 1</button>
+                <button class="sub-tab-button" onclick="openSubTab(event, 'ALL2')">★★ 2</button>
+                <button class="sub-tab-button" onclick="openSubTab(event, 'ALL3')">★★★ 3</button>
+                <button class="sub-tab-button active" onclick="openSubTab(event, 'GlobalALL')">הכל</button>
+            </div>
+            <div id="ALL1" class="sub-tab-content"><table id="tableALL1"><tbody></tbody></table></div>
+            <div id="ALL2" class="sub-tab-content"><table id="tableALL2"><tbody></tbody></table></div>
+            <div id="ALL3" class="sub-tab-content"><table id="tableALL3"><tbody></tbody></table></div>
+            <div id="GlobalALL" class="sub-tab-content active"><table id="tableGlobalALL"><tbody></tbody></table></div>
         </div>
     </div>
 
     <div id="loading" class="loading-msg">טוען נתונים...</div>
+    <div id="noResults" class="no-results">לא נמצאה מילה מתאימה</div>
 
     <div class="form-container">
         <h3 style="text-align: center; color: #1a73e8;">הצעה למילה חדשה או דיווח על טעות</h3>
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" width="100%" height="800" frameborder="0" marginheight="0" marginwidth="0">טוען...</iframe>
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" width="100%" height="800" frameborder="0">טוען...</iframe>
     </div>
 </div>
 
@@ -135,14 +144,26 @@
     }
 
     function renderAll() {
-        const tableIds = ['A1','A2','A3','A_ALL','B1','B2','B3','B_ALL','C1','C2','C3','C_ALL','GlobalALL'];
+        const tableIds = [
+            'A1','A2','A3','A_ALL',
+            'B1','B2','B3','B_ALL',
+            'C1','C2','C3','C_ALL',
+            'ALL1','ALL2','ALL3','GlobalALL'
+        ];
         tableIds.forEach(id => { const el = document.querySelector(`#table${id} tbody`); if(el) el.innerHTML = ''; });
 
         let sorted = [...allData].sort((a, b) => a[currentSort].localeCompare(b[currentSort], currentSort === 'he' ? 'he' : 'en'));
         let lastLetters = {};
 
         sorted.forEach(item => {
-            const keys = [item.type + item.stars, item.type + '_ALL', 'GlobalALL'];
+            // רשימה של כל הטבלאות שהמילה צריכה להופיע בהן
+            const keys = [
+                item.type + item.stars, // למשל A3
+                item.type + '_ALL',      // למשל A_ALL
+                'ALL' + item.stars,     // למשל ALL3 (כוכב ספציפי בכל המילים)
+                'GlobalALL'             // הכל בכל המילים
+            ];
+
             keys.forEach(key => {
                 const tbody = document.querySelector(`#table${key} tbody`);
                 if (!tbody) return;
@@ -174,12 +195,8 @@
         const activeSubTab = document.querySelector('.tab-content.active .sub-tab-content.active');
         const activeMainTabContent = document.querySelector('.tab-content.active');
         
-        let currentVisibleId = "";
-        if (activeMainTabContent && activeMainTabContent.id === 'listALL') {
-            currentVisibleId = "GlobalALL";
-        } else if (activeSubTab) {
-            currentVisibleId = activeSubTab.id;
-        }
+        let currentVisibleId = activeSubTab ? activeSubTab.id : "";
+        let visibleRowsCount = 0;
 
         document.querySelectorAll(".data-row").forEach(r => {
             const wordText = r.querySelector('.word-text').innerText.toLowerCase();
@@ -192,9 +209,15 @@
             const matchesQ = wordText.includes(q) || translationText.includes(q);
             const isVisibleTable = (rowParentId === currentVisibleId);
 
-            r.style.display = (matchesQ && isVisibleTable) ? "" : "none";
+            if (matchesQ && isVisibleTable) {
+                r.style.display = "";
+                visibleRowsCount++;
+            } else {
+                r.style.display = "none";
+            }
 
-            if (currentVisibleId === 'GlobalALL') {
+            // עדכון תגיות מידע
+            if (currentVisibleId === 'GlobalALL' || currentVisibleId.startsWith('ALL')) {
                 infoTag.innerText = `${listType === 'A'?'א':listType==='B'?'ב':'ג'} - ★${stars}`;
             } else if (currentVisibleId.includes('_ALL')) {
                 infoTag.innerText = `★${stars}`;
@@ -203,10 +226,14 @@
             }
         });
         
+        // הצגת/הסתרת אותיות ודיביידרים
         document.querySelectorAll(".letter-row").forEach(d => {
             const parentId = d.parentElement.parentElement.id.replace('table','');
             d.style.display = (q === "" && parentId === currentVisibleId) ? "" : "none";
         });
+
+        // הצגת הודעת "לא נמצא"
+        document.getElementById('noResults').style.display = (visibleRowsCount === 0 && q !== "") ? "block" : "none";
     }
 
     function openTab(e, id) {
