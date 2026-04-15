@@ -8,22 +8,32 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #1a73e8; }
+        
         .controls { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .search-box { width: 100%; max-width: 400px; padding: 10px; border-radius: 20px; border: 1px solid #ccc; font-size: 16px; outline: none; }
+        
+        .search-area { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .search-box { width: 100%; padding: 10px; border-radius: 20px; border: 1px solid #ccc; font-size: 16px; outline: none; box-sizing: border-box; }
+        .search-scope { font-size: 14px; color: #555; }
+
         .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-button, .sub-tab-button { padding: 10px 25px; cursor: pointer; border: none; background: #e0e0e0; border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 16px; }
         .tab-button.active { background: #1a73e8; color: white; }
+        
         .sub-tabs { margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px; }
         .sub-tab-button { font-size: 14px; padding: 8px 15px; background: #f0f0f0; color: #555; }
         .sub-tab-button.active { background: #fbbc05; color: black; }
+        
         .tab-content, .sub-tab-content { display: none; }
         .tab-content.active, .sub-tab-content.active { display: block; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #f8f9fa; }
         
         /* עיצוב שורת האות הגדולה */
-        .letter-divider { background-color: #e8f0fe; font-weight: bold; font-size: 1.2em; color: #1a73e8; text-align: right; padding-right: 20px !important; }
+        .letter-divider { background-color: #e8f0fe; font-weight: bold; font-size: 1.2em; color: #1a73e8; padding: 8px 20px !important; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
         
         .loading-msg { text-align: center; font-weight: bold; padding: 20px; color: #666; }
         .suggestion-box { background: #e8f0fe; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: center; }
@@ -35,7 +45,14 @@
     <h1>ניהול רשימות heb2ing</h1>
 
     <div class="controls">
-        <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה..." onkeyup="filterTables()">
+        <div class="search-area">
+            <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה..." onkeyup="filterTables()">
+            <div class="search-scope">
+                חפש בתוך: 
+                <label><input type="radio" name="scope" value="all" checked onclick="filterTables()"> כל האתר</label>
+                <label><input type="radio" name="scope" value="stars" onclick="filterTables()"> רשימה ג' בלבד</label>
+            </div>
+        </div>
         <div class="sort-options">
             <span>מיין לפי:</span>
             <label><input type="radio" name="sortOrder" value="he" checked onclick="currentSort='he'; renderAll();"> א"ב עברי</label>
@@ -44,18 +61,18 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-button active" onclick="openTab(event, 'listA')">רשימה א'</button>
-        <button class="tab-button" onclick="openTab(event, 'listB')">רשימה ב'</button>
-        <button class="tab-button" onclick="openTab(event, 'listC')">רשימה ג'</button>
+        <button class="tab-button active" id="btnA" onclick="openTab(event, 'listA')">רשימה א'</button>
+        <button class="tab-button" id="btnB" onclick="openTab(event, 'listB')">רשימה ב'</button>
+        <button class="tab-button" id="btnC" onclick="openTab(event, 'listC')">רשימה ג'</button>
     </div>
 
     <div id="listA" class="tab-content active"><table id="tableA"><thead><tr><th>עברית</th><th>אנגלית</th></tr></thead><tbody></tbody></table></div>
     <div id="listB" class="tab-content"><table id="tableB"><thead><tr><th>עברית</th><th>אנגלית</th></tr></thead><tbody></tbody></table></div>
     <div id="listC" class="tab-content">
         <div class="sub-tabs">
-            <button class="sub-tab-button" onclick="openSubTab(event, 'star1')">★ 1</button>
-            <button class="sub-tab-button" onclick="openSubTab(event, 'star2')">★★ 2</button>
-            <button class="sub-tab-button active" onclick="openSubTab(event, 'star3')">★★★ 3</button>
+            <button class="sub-tab-button" id="btnS1" onclick="openSubTab(event, 'star1')">★ 1</button>
+            <button class="sub-tab-button" id="btnS2" onclick="openSubTab(event, 'star2')">★★ 2</button>
+            <button class="sub-tab-button active" id="btnS3" onclick="openSubTab(event, 'star3')">★★★ 3</button>
         </div>
         <div id="star1" class="sub-tab-content"><table id="tableC1"><tbody></tbody></table></div>
         <div id="star2" class="sub-tab-content"><table id="tableC2"><tbody></tbody></table></div>
@@ -75,7 +92,7 @@
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
     
     let allData = [];
-    let currentSort = 'he'; // ברירת מחדל עברית
+    let currentSort = 'he';
 
     async function fetchData() {
         try {
@@ -85,12 +102,11 @@
             allData = rows.map(row => {
                 const cols = row.split(',').map(c => c.replace(/"/g, '').trim());
                 return { he: cols[0], en: cols[1], type: cols[2], stars: cols[3] };
-            }).filter(item => item.he); // מסנן שורות ריקות
-            
+            }).filter(item => item.he);
             document.getElementById('loading').style.display = 'none';
             renderAll();
         } catch (e) {
-            document.getElementById('loading').innerText = "שגיאה בטעינת נתונים.";
+            document.getElementById('loading').innerText = "שגיאה בטעינה.";
         }
     }
 
@@ -101,13 +117,12 @@
             if(tb) tb.innerHTML = '';
         });
 
-        // מיון הנתונים
         let sorted = [...allData].sort((a, b) => 
             a[currentSort].localeCompare(b[currentSort], currentSort === 'he' ? 'he' : 'en')
         );
 
-        // אובייקט למעקב אחרי האות האחרונה בכל טבלה
         let lastLetters = {};
+        const alignmentClass = currentSort === 'he' ? 'text-right' : 'text-left';
 
         sorted.forEach(item => {
             let tableKey = item.type === 'ג' ? 'ג' + item.stars : item.type;
@@ -118,19 +133,39 @@
                 const currentWord = item[currentSort];
                 const firstLetter = currentWord.charAt(0).toUpperCase();
 
-                // הוספת כותרת אות אם היא השתנתה
                 if (lastLetters[tableId] !== firstLetter) {
                     const divider = document.createElement('tr');
-                    divider.innerHTML = `<td colspan="2" class="letter-divider">${firstLetter}</td>`;
+                    divider.className = 'letter-row';
+                    divider.innerHTML = `<td colspan="2" class="letter-divider ${alignmentClass}">${firstLetter}</td>`;
                     tbody.appendChild(divider);
                     lastLetters[tableId] = firstLetter;
                 }
 
                 const row = document.createElement('tr');
+                row.className = 'data-row';
+                row.setAttribute('data-type', item.type);
                 row.innerHTML = `<td>${item.he}</td><td>${item.en}</td>`;
                 tbody.appendChild(row);
             }
         });
+    }
+
+    function filterTables() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const scope = document.querySelector('input[name="scope"]:checked').value;
+        const rows = document.querySelectorAll(".data-row");
+        const dividers = document.querySelectorAll(".letter-row");
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const type = row.getAttribute('data-type');
+            const matchesQuery = text.includes(query);
+            const matchesScope = (scope === 'all' || type === 'ג');
+            
+            row.style.display = (matchesQuery && matchesScope) ? "" : "none";
+        });
+
+        dividers.forEach(div => div.style.display = query ? "none" : "");
     }
 
     function openTab(evt, tabName) {
@@ -145,18 +180,6 @@
         document.querySelectorAll(".sub-tab-button").forEach(b => b.classList.remove("active"));
         document.getElementById(subName).classList.add("active");
         evt.currentTarget.classList.add("active");
-    }
-
-    function filterTables() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        // בחיפוש אנחנו מסתירים גם את הכותרות של האותיות כדי שלא יפריעו
-        document.querySelectorAll("tbody tr").forEach(row => {
-            if (row.classList.contains('letter-divider')) {
-                row.style.display = query ? "none" : "";
-            } else {
-                row.style.display = row.innerText.toLowerCase().includes(query) ? "" : "none";
-            }
-        });
     }
 
     fetchData();
