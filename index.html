@@ -8,34 +8,24 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #1a73e8; }
-        
         .controls { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        
-        .search-area { width: 100%; max-width: 600px; display: flex; gap: 5px; align-items: center; position: relative; }
+        .search-area { width: 100%; max-width: 600px; display: flex; gap: 5px; align-items: center; }
         .search-box { flex-grow: 1; padding: 10px 15px; border-radius: 20px 0 0 20px; border: 1px solid #ccc; font-size: 16px; outline: none; border-left: none; }
         .search-select { padding: 10px; border-radius: 0 20px 20px 0; border: 1px solid #ccc; background: #f8f9fa; cursor: pointer; font-size: 14px; outline: none; }
-
         .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-button, .sub-tab-button { padding: 10px 25px; cursor: pointer; border: none; background: #e0e0e0; border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 16px; }
         .tab-button.active { background: #1a73e8; color: white; }
-        
         .sub-tabs { margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px; }
         .sub-tab-button { font-size: 14px; padding: 8px 15px; background: #f0f0f0; color: #555; }
         .sub-tab-button.active { background: #fbbc05; color: black; }
-        
         .tab-content, .sub-tab-content { display: none; }
         .tab-content.active, .sub-tab-content.active { display: block; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background-color: #f8f9fa; }
-        
         .letter-divider { background-color: #e8f0fe; font-weight: bold; font-size: 1.2em; color: #1a73e8; padding: 8px 20px !important; }
         .text-right { text-align: right; }
         .text-left { text-align: left; }
-        
         .loading-msg { text-align: center; font-weight: bold; padding: 20px; color: #666; }
-        .suggestion-box { background: #e8f0fe; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: center; }
     </style>
 </head>
 <body>
@@ -97,12 +87,8 @@
         <div id="C3" class="sub-tab-content active"><table id="tableC3"><tbody></tbody></table></div>
     </div>
 
-    <div id="loading" class="loading-msg">טוען נתונים מהגוגל שיטס...</div>
-
-    <div class="suggestion-box">
-        <h3>הצעה למילה חדשה</h3>
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" width="100%" height="500" frameborder="0">בטעינה…</iframe>
-    </div>
+    <div id="loading" class="loading-msg">טוען נתונים...</div>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" width="100%" height="500" frameborder="0" style="margin-top:30px;">בטעינה…</iframe>
 </div>
 
 <script>
@@ -118,92 +104,89 @@
             const text = await response.text();
             const rows = text.split('\n').slice(1);
             allData = rows.map(row => {
-                const cols = row.split(',').map(c => c.replace(/"/g, '').trim());
-                return { he: cols[0], en: cols[1], type: cols[2], stars: cols[3] };
-            }).filter(item => item.he);
+                // פיצול שורה לפי פסיקים תוך טיפול בגרשיים
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+                return { 
+                    he: cols[0] || '', 
+                    en: cols[1] || '', 
+                    type: cols[2] ? cols[2].replace('רשימה ', '') : '', 
+                    stars: cols[3] || '3' // אם ריק, ברירת מחדל 3
+                };
+            }).filter(item => item.he !== '');
+            
             document.getElementById('loading').style.display = 'none';
             renderAll();
         } catch (e) {
-            document.getElementById('loading').innerText = "שגיאה בטעינה.";
+            document.getElementById('loading').innerText = "שגיאה בחיבור לנתונים.";
         }
     }
 
     function renderAll() {
         const tableIds = ['A1','A2','A3','B1','B2','B3','C1','C2','C3'];
-        tableIds.forEach(id => document.querySelector(`#table${id} tbody`).innerHTML = '');
+        tableIds.forEach(id => {
+            const el = document.querySelector(`#table${id} tbody`);
+            if(el) el.innerHTML = '';
+        });
 
-        let sorted = [...allData].sort((a, b) => 
-            a[currentSort].localeCompare(b[currentSort], currentSort === 'he' ? 'he' : 'en')
-        );
-
+        let sorted = [...allData].sort((a, b) => a[currentSort].localeCompare(b[currentSort], currentSort === 'he' ? 'he' : 'en'));
         let lastLetters = {};
-        const alignmentClass = currentSort === 'he' ? 'text-right' : 'text-left';
 
         sorted.forEach(item => {
-            let tableKey = item.type.toUpperCase() + item.stars;
-            let tableElement = document.querySelector(`#table${tableKey} tbody`);
+            let tType = item.type === 'א' ? 'A' : (item.type === 'ב' ? 'B' : 'C');
+            let tableKey = tType + item.stars;
+            let tbody = document.querySelector(`#table${tableKey} tbody`);
             
-            if (tableElement) {
-                const currentWord = item[currentSort];
-                const firstLetter = currentWord.charAt(0).toUpperCase();
-
+            if (tbody) {
+                const firstLetter = item[currentSort].charAt(0).toUpperCase();
                 if (lastLetters[tableKey] !== firstLetter) {
-                    const divider = document.createElement('tr');
-                    divider.className = 'letter-row';
-                    divider.innerHTML = `<td colspan="2" class="letter-divider ${alignmentClass}">${firstLetter}</td>`;
-                    tableElement.appendChild(divider);
+                    const div = document.createElement('tr');
+                    div.className = 'letter-row';
+                    div.innerHTML = `<td colspan="2" class="letter-divider ${currentSort === 'he' ? 'text-right' : 'text-left'}">${firstLetter}</td>`;
+                    tbody.appendChild(div);
                     lastLetters[tableKey] = firstLetter;
                 }
-
-                const row = document.createElement('tr');
-                row.className = 'data-row';
-                row.setAttribute('data-id', tableKey);
-                row.innerHTML = `<td>${item.he}</td><td>${item.en}</td>`;
-                tableElement.appendChild(row);
+                const tr = document.createElement('tr');
+                tr.className = 'data-row';
+                tr.setAttribute('data-id', tableKey);
+                tr.innerHTML = `<td>${item.he}</td><td>${item.en}</td>`;
+                tbody.appendChild(tr);
             }
         });
     }
 
-    function filterTables() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const scope = document.getElementById('searchScope').value;
-        const activeSubTabId = document.querySelector('.sub-tab-content.active').id;
-        const rows = document.querySelectorAll(".data-row");
-        const dividers = document.querySelectorAll(".letter-row");
-
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            const rowId = row.getAttribute('data-id');
-            const matchesQuery = text.includes(query);
-            const matchesScope = (scope === 'all' || rowId === activeSubTabId);
-            
-            row.style.display = (matchesQuery && matchesScope) ? "" : "none";
-        });
-
-        dividers.forEach(div => div.style.display = query ? "none" : "");
-    }
-
-    function openTab(evt, tabName) {
+    function openTab(e, id) {
         document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
         document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
-        filterTables(); // עדכון חיפוש אם הוחלפה לשונית
+        document.getElementById(id).classList.add("active");
+        e.currentTarget.classList.add("active");
+        filterTables();
     }
 
-    function openSubTab(evt, subName) {
-        const parent = evt.currentTarget.parentElement;
-        parent.querySelectorAll(".sub-tab-button").forEach(b => b.classList.remove("active"));
+    function openSubTab(e, id) {
+        const p = e.currentTarget.parentElement;
+        p.querySelectorAll(".sub-tab-button").forEach(b => b.classList.remove("active"));
         document.querySelectorAll(".sub-tab-content").forEach(t => {
-            if(t.parentElement.id === parent.parentElement.id) t.classList.remove("active");
+            if(t.parentElement.id === p.parentElement.id) t.classList.remove("active");
         });
-        document.getElementById(subName).classList.add("active");
-        evt.currentTarget.classList.add("active");
-        filterTables(); // עדכון חיפוש אם הוחלפה תת-לשונית
+        document.getElementById(id).classList.add("active");
+        e.currentTarget.classList.add("active");
+        filterTables();
+    }
+
+    function filterTables() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const s = document.getElementById('searchScope').value;
+        const activeId = document.querySelector('.tab-content.active .sub-tab-content.active').id;
+        
+        document.querySelectorAll(".data-row").forEach(r => {
+            const matchesQ = r.innerText.toLowerCase().includes(q);
+            const matchesS = (s === 'all' || r.getAttribute('data-id') === activeId);
+            r.style.display = (matchesQ && matchesS) ? "" : "none";
+        });
+        document.querySelectorAll(".letter-row").forEach(d => d.style.display = q ? "none" : "");
     }
 
     fetchData();
 </script>
-
 </body>
 </html>
