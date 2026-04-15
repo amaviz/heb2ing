@@ -25,10 +25,12 @@
         .letter-divider { background-color: #e8f0fe; font-weight: bold; font-size: 1.2em; color: #1a73e8; padding: 8px 20px !important; }
         .text-right { text-align: right; }
         .text-left { text-align: left; }
+        .info-tag { font-size: 0.8em; color: #666; font-weight: normal; display: block; margin-top: 4px; background: #f0f0f0; border-radius: 4px; padding: 2px; }
         .loading-msg { text-align: center; font-weight: bold; padding: 20px; color: #666; }
-        /* עיצוב מיוחד לתוצאות חיפוש גלובליות */
+        
+        /* עיצוב למצב חיפוש */
         .search-mode .tab-content, .search-mode .sub-tab-content { display: block !important; }
-        .search-mode .tabs, .search-mode .sub-tabs, .search-mode h2 { display: none !important; }
+        .search-mode .tabs, .search-mode .sub-tabs { display: none !important; }
     </style>
 </head>
 <body>
@@ -94,7 +96,7 @@
     </div>
 
     <div id="loading" class="loading-msg">טוען נתונים...</div>
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" width="100%" height="500" frameborder="0" style="margin-top:30px; border-radius: 8px; border: 1px solid #ddd;">בטעינה…</iframe>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd1Lj23HKtXMkp1sOJ_pE3xluNmWhdNFU7z9JVg5BiAPsLiFg/viewform?embedded=true" width="100%" height="500" frameborder="0" style="margin-top:30px; border-radius: 8px;"></iframe>
 </div>
 
 <script>
@@ -103,6 +105,7 @@
     
     let allData = [];
     let currentSort = 'he';
+    let activeMainTab = 'A'; 
 
     async function fetchData() {
         try {
@@ -111,10 +114,13 @@
             const rows = text.split('\n').slice(1);
             allData = rows.map(row => {
                 const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+                let rawType = cols[2] ? cols[2].replace('רשימה ', '').trim() : 'א';
+                let mappedType = rawType === 'א' ? 'A' : (rawType === 'ב' ? 'B' : 'C');
                 return { 
                     he: cols[0] || '', 
                     en: cols[1] || '', 
-                    type: cols[2] ? cols[2].replace('רשימה ', '').replace('א','A').replace('ב','B').replace('ג','C') : '', 
+                    type: mappedType,
+                    rawHebType: rawType,
                     stars: cols[3] || '3' 
                 };
             }).filter(item => item.he !== '');
@@ -151,9 +157,13 @@
                 }
                 const tr = document.createElement('tr');
                 tr.className = 'data-row';
-                tr.setAttribute('data-parent-list', item.type); // A, B, or C
-                tr.setAttribute('data-full-id', tableKey); // e.g. A3
-                tr.innerHTML = `<td>${item.he}</td><td>${item.en}</td>`;
+                tr.setAttribute('data-list', item.type);
+                tr.setAttribute('data-stars', item.stars);
+                tr.setAttribute('data-full-id', tableKey);
+                
+                // הוספת תגית מידע לחיפוש
+                const infoTag = `<span class="info-tag">${item.rawHebType} - ★${item.stars}</span>`;
+                tr.innerHTML = `<td>${item.he}${infoTag}</td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
             }
         });
@@ -163,32 +173,32 @@
     function filterTables() {
         const q = document.getElementById('searchInput').value.toLowerCase();
         const scope = document.getElementById('searchScope').value;
-        const activeTab = document.querySelector('.tab-button.active').innerText.replace("רשימה ","").replace("א","A").replace("ב","B").replace("ג","C");
         const activeSubId = document.querySelector('.tab-content.active .sub-tab-content.active').id;
+        const wrapper = document.getElementById('navigation-wrapper');
         
-        const container = document.getElementById('navigation-wrapper');
-        
-        // אם יש טקסט בחיפוש והוא גלובלי או רשימתי, נבטל את ההסתרה של הלשוניות
-        if (q) {
-            container.classList.add('search-mode');
-        } else {
-            container.classList.remove('search-mode');
-        }
+        if (q) wrapper.classList.add('search-mode');
+        else wrapper.classList.remove('search-mode');
 
         document.querySelectorAll(".data-row").forEach(r => {
             const text = r.innerText.toLowerCase();
-            const parentList = r.getAttribute('data-parent-list');
+            const listType = r.getAttribute('data-list');
+            const stars = r.getAttribute('data-stars');
             const fullId = r.getAttribute('data-full-id');
+            const infoTag = r.querySelector('.info-tag');
             
             const matchesQ = text.includes(q);
             let matchesScope = false;
 
             if (scope === 'all') {
                 matchesScope = true;
+                if(infoTag) infoTag.style.display = "block";
             } else if (scope === 'list') {
-                matchesScope = (parentList === activeTab);
+                matchesScope = (listType === activeMainTab);
+                if(infoTag) infoTag.innerHTML = `★${stars}`;
+                if(infoTag) infoTag.style.display = "block";
             } else {
                 matchesScope = (fullId === activeSubId);
+                if(infoTag) infoTag.style.display = "none";
             }
 
             r.style.display = (matchesQ && matchesScope) ? "" : "none";
@@ -198,6 +208,7 @@
     }
 
     function openTab(e, id) {
+        activeMainTab = id.replace('list', ''); // מעדכן איזו רשימה פעילה (A, B או C)
         document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
         document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
         document.getElementById(id).classList.add("active");
