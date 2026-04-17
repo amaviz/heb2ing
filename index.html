@@ -39,9 +39,9 @@
         
         .filter-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .filter-label { font-weight: bold; font-size: 0.9em; color: var(--primary-blue); }
-        .filter-options { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; width: 100%; }
+        .filter-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; width: 100%; max-width: 700px; }
         
-        .f-btn { min-width: 90px; padding: 7px 14px; border: 1px solid var(--border-color); background: var(--container-bg); border-radius: 15px; cursor: pointer; font-size: 13px; color: var(--text-color); transition: 0.2s; white-space: nowrap; }
+        .f-btn { padding: 8px; border: 1px solid var(--border-color); background: var(--container-bg); border-radius: 15px; cursor: pointer; font-size: 13px; color: var(--text-color); transition: 0.2s; text-align: center; }
         .f-btn.active { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
         .pos-he.active { background: var(--accent-green); border-color: var(--accent-green); color: white; }
         .pos-en.active { background: var(--accent-purple); border-color: var(--accent-purple); color: white; }
@@ -61,8 +61,8 @@
         table { width: 100%; border-collapse: collapse; background: var(--container-bg); }
         td { border: 1px solid var(--border-color); padding: 12px; text-align: center; width: 50%; }
         
-        /* עיצוב אותיות גדולות / חוצצים */
-        .letter-divider { background: var(--tab-bg); font-weight: bold; color: var(--primary-blue); text-align: right; padding: 5px 15px; border: 1px solid var(--border-color); }
+        /* חוצץ אותיות ממורכז */
+        .letter-divider { background: var(--tab-bg); font-weight: bold; color: var(--primary-blue); text-align: center; padding: 8px; border: 1px solid var(--border-color); font-size: 1.2em; }
         .tag { font-size: 0.75em; color: #888; display: block; margin-top: 4px; }
         .no-results { text-align: center; padding: 30px; color: #888; display: none; }
 
@@ -81,6 +81,10 @@
                 <span data-lang-content="en">עברית</span>
             </button>
             <button class="top-btn" onclick="toggleDark()">🌙</button>
+            <button class="top-btn" id="sortBtn" onclick="toggleSort()">
+                <span data-lang-content="he">מיין לפי: אנגלית</span>
+                <span data-lang-content="en">Sort by: Hebrew</span>
+            </button>
         </div>
         <button class="top-btn kids-mode-btn" id="kidsBtn" onclick="toggleKids()">
             <span data-lang-content="he" id="kidsTextHe">👶 מצב ילדים: כבוי</span>
@@ -98,8 +102,8 @@
         
         <div class="filter-group">
             <div class="filter-label">
-                <span data-lang-content="he">סוג תוכן (בחירה מרובה):</span>
-                <span data-lang-content="en">Content Type (Multiple):</span>
+                <span data-lang-content="he">סוג תוכן:</span>
+                <span data-lang-content="en">Content Type:</span>
             </div>
             <div class="filter-options" id="typeContainer">
                 <button class="f-btn active" id="type_all" onclick="toggleType('all', this)">
@@ -191,6 +195,7 @@
     let state = {
         lang: 'he',
         kids: false,
+        sortBy: 'he', // 'he' or 'en'
         types: new Set(['all']),
         posHe: new Set(['all']),
         posEn: new Set(['all']),
@@ -219,74 +224,50 @@
                     isProfane: BANNED.some(w => (he + " " + en).toLowerCase().includes(w))
                 };
             }).filter(i => i.he);
-            renderStructure();
-            filter();
+            renderAll();
         } catch (e) { console.error("Error:", e); }
     }
 
-    function renderStructure() {
+    function renderAll() {
         const area = document.getElementById('contentArea');
         area.innerHTML = '';
+        
+        // מיון הנתונים לפי המצב הנבחר
+        const sorted = [...rawData].sort((a,b) => {
+            return state.sortBy === 'he' ? a.he.localeCompare(b.he, 'he') : a.en.localeCompare(b.en, 'en');
+        });
+
         ['A', 'B', 'C', 'ALL'].forEach(l => {
             const div = document.createElement('div');
             div.id = `tab${l}`;
             div.className = `tab-content ${state.tab === l ? 'active' : ''}`;
-            div.innerHTML = `
-                <div class="sub-tabs">
-                    <button class="sub-btn" onclick="showSub('${l}', '1', this)">★ 1</button>
-                    <button class="sub-btn" onclick="showSub('${l}', '2', this)">★★ 2</button>
-                    <button class="sub-btn" onclick="showSub('${l}', '3', this)">★★★ 3</button>
-                    <button class="sub-btn active btn-all-stars" onclick="showSub('${l}', 'ALL', this)">
-                        <span data-lang-content="he">כל הכוכבים</span><span data-lang-content="en">All Stars</span>
-                    </button>
-                </div>
-                <div id="sub${l}1" class="sub-content"><table><tbody></tbody></table></div>
-                <div id="sub${l}2" class="sub-content"><table><tbody></tbody></table></div>
-                <div id="sub${l}3" class="sub-content"><table><tbody></tbody></table></div>
-                <div id="sub${l}ALL" class="sub-content active"><table><tbody></tbody></table></div>
-            `;
-            area.appendChild(div);
-        });
-        fillTables();
-    }
-
-    function fillTables() {
-        // מיון אלפביתי בעברית
-        const sorted = [...rawData].sort((a,b) => a.he.localeCompare(b.he, 'he'));
-        
-        ['A', 'B', 'C', 'ALL'].forEach(listKey => {
-            ['1','2','3','ALL'].forEach(starKey => {
-                const tbody = document.querySelector(`#sub${listKey}${starKey} tbody`);
-                if (!tbody) return;
-
-                let lastLetter = '';
+            
+            let htmlTabs = `<div class="sub-tabs">`;
+            ['1','2','3'].forEach(s => htmlTabs += `<button class="sub-btn ${state.sub === s ? 'active' : ''}" onclick="showSub('${l}', '${s}', this)">★ ${s}</button>`);
+            htmlTabs += `<button class="sub-btn btn-all-stars ${state.sub === 'ALL' ? 'active' : ''}" onclick="showSub('${l}', 'ALL', this)"><span data-lang-content="he">כל הכוכבים</span><span data-lang-content="en">All Stars</span></button></div>`;
+            
+            let htmlContents = '';
+            ['1','2','3','ALL'].forEach(sk => {
+                htmlContents += `<div id="sub${l}${sk}" class="sub-content ${state.sub === sk ? 'active' : ''}"><table><tbody>`;
+                let lastChar = '';
                 sorted.forEach(item => {
-                    const matchTab = listKey === 'ALL' || item.list === listKey;
-                    const matchStar = starKey === 'ALL' || item.stars === starKey;
-
-                    if (matchTab && matchStar) {
-                        const currentLetter = item.he.trim().charAt(0);
-                        if (currentLetter !== lastLetter) {
-                            const trL = document.createElement('tr');
-                            trL.className = 'letter-row';
-                            trL.innerHTML = `<td colspan="2" class="letter-divider">${currentLetter}</td>`;
-                            tbody.appendChild(trL);
-                            lastLetter = currentLetter;
+                    if ((l === 'ALL' || item.list === l) && (sk === 'ALL' || item.stars === sk)) {
+                        const currentChar = state.sortBy === 'he' ? item.he.trim().charAt(0) : item.en.trim().charAt(0).toUpperCase();
+                        if (currentChar !== lastChar) {
+                            htmlContents += `<tr class="letter-row"><td colspan="2" class="letter-divider">${currentChar}</td></tr>`;
+                            lastChar = currentChar;
                         }
-
-                        const tr = document.createElement('tr');
-                        tr.className = 'item-row';
-                        tr.dataset.spaceHe = item.hasSpaceHe;
-                        tr.dataset.spaceEn = item.hasSpaceEn;
-                        tr.dataset.posHe = item.posHe;
-                        tr.dataset.posEn = item.posEn;
-                        tr.dataset.profane = item.isProfane;
-                        tr.innerHTML = `<td>${item.he}<span class="tag">${item.posHe}</span></td><td>${item.en}<span class="tag">${item.posEn}</span></td>`;
-                        tbody.appendChild(tr);
+                        htmlContents += `<tr class="item-row" data-space-he="${item.hasSpaceHe}" data-space-en="${item.hasSpaceEn}" data-pos-he="${item.posHe}" data-pos-en="${item.posEn}" data-profane="${item.isProfane}">
+                            <td>${item.he}<span class="tag">${item.posHe}</span></td><td>${item.en}<span class="tag">${item.posEn}</span></td></tr>`;
                     }
                 });
+                htmlContents += `</tbody></table></div>`;
             });
+            
+            div.innerHTML = htmlTabs + htmlContents;
+            area.appendChild(div);
         });
+        filter();
     }
 
     function filter() {
@@ -294,12 +275,8 @@
         let visibleCount = 0;
         
         document.querySelectorAll('.sub-content.active .item-row').forEach(row => {
-            if (state.kids && row.dataset.profane === 'true') {
-                row.style.display = 'none';
-                return;
-            }
+            if (state.kids && row.dataset.profane === 'true') { row.style.display = 'none'; return; }
 
-            // סינון סוגי תוכן מרובים
             const spHe = row.dataset.spaceHe === 'true';
             const spEn = row.dataset.spaceEn === 'true';
             let matchType = state.types.has('all');
@@ -317,12 +294,9 @@
             if (matchSearch && matchType && matchPosHe && matchPosEn) {
                 row.style.display = '';
                 visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
+            } else { row.style.display = 'none'; }
         });
 
-        // הסתרת אותיות ריקות
         document.querySelectorAll('.sub-content.active .letter-row').forEach(lRow => {
             let next = lRow.nextElementSibling;
             let hasVisible = false;
@@ -332,8 +306,12 @@
             }
             lRow.style.display = hasVisible ? '' : 'none';
         });
-
         document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    function toggleSort() {
+        state.sortBy = state.sortBy === 'he' ? 'en' : 'he';
+        renderAll();
     }
 
     function toggleType(val, btn) {
@@ -343,10 +321,7 @@
             state.types.has(val) ? state.types.delete(val) : state.types.add(val);
             if (state.types.size === 0) state.types.add('all');
         }
-        document.querySelectorAll('#typeContainer .f-btn').forEach(b => {
-            const bVal = b.id.replace('type_','');
-            b.classList.toggle('active', state.types.has(bVal));
-        });
+        document.querySelectorAll('#typeContainer .f-btn').forEach(b => b.classList.toggle('active', state.types.has(b.id.replace('type_',''))));
         filter();
     }
 
@@ -403,8 +378,7 @@
 
     function showSub(l, s, btn) {
         state.sub = s;
-        const parent = document.getElementById(`tab${l}`);
-        parent.querySelectorAll('.sub-btn, .sub-content').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.sub-btn, .sub-content').forEach(x => x.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(`sub${l}${s}`).classList.add('active');
         filter();
