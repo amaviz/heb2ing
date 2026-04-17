@@ -38,11 +38,10 @@
         .search-box { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 25px; border: 1px solid var(--border-color); font-size: 16px; outline: none; }
         
         .filter-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .filter-label { font-weight: bold; font-size: 0.9em; color: var(--primary-blue); min-height: 1.2em; }
+        .filter-label { font-weight: bold; font-size: 0.9em; color: var(--primary-blue); }
         .filter-options { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; width: 100%; }
         
-        /* קיבוע רוחב כפתורים למניעת תזוזות */
-        .f-btn { min-width: 80px; padding: 6px 12px; border: 1px solid var(--border-color); background: var(--container-bg); border-radius: 15px; cursor: pointer; font-size: 13px; color: var(--text-color); transition: 0.2s; white-space: nowrap; }
+        .f-btn { min-width: 90px; padding: 7px 14px; border: 1px solid var(--border-color); background: var(--container-bg); border-radius: 15px; cursor: pointer; font-size: 13px; color: var(--text-color); transition: 0.2s; white-space: nowrap; }
         .f-btn.active { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
         .pos-he.active { background: var(--accent-green); border-color: var(--accent-green); color: white; }
         .pos-en.active { background: var(--accent-purple); border-color: var(--accent-purple); color: white; }
@@ -54,8 +53,6 @@
         .sub-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; }
         .sub-btn { padding: 5px 12px; cursor: pointer; border: 1px solid var(--border-color); background: transparent; border-radius: 10px; font-size: 13px; color: var(--text-color); }
         .sub-btn.active { background: #fbbc05; border-color: #fbbc05; color: black; font-weight: bold; }
-        
-        /* כפתור "הכל" תמיד בסוף (שמאל בעברית) */
         .btn-all-stars { order: 10; }
 
         .tab-content, .sub-content { display: none; }
@@ -63,10 +60,12 @@
         
         table { width: 100%; border-collapse: collapse; background: var(--container-bg); }
         td { border: 1px solid var(--border-color); padding: 12px; text-align: center; width: 50%; }
+        
+        /* עיצוב אותיות גדולות / חוצצים */
+        .letter-divider { background: var(--tab-bg); font-weight: bold; color: var(--primary-blue); text-align: right; padding: 5px 15px; border: 1px solid var(--border-color); }
         .tag { font-size: 0.75em; color: #888; display: block; margin-top: 4px; }
         .no-results { text-align: center; padding: 30px; color: #888; display: none; }
 
-        /* ניהול תצוגת שפות בתוך כפתורים */
         [data-lang-content] { display: none; }
         html[lang="he"] [data-lang-content="he"] { display: inline; }
         html[lang="en"] [data-lang-content="en"] { display: inline; }
@@ -99,23 +98,23 @@
         
         <div class="filter-group">
             <div class="filter-label">
-                <span data-lang-content="he">סוג תוכן:</span>
-                <span data-lang-content="en">Content Type:</span>
+                <span data-lang-content="he">סוג תוכן (בחירה מרובה):</span>
+                <span data-lang-content="en">Content Type (Multiple):</span>
             </div>
-            <div class="filter-options">
-                <button class="f-btn active" id="type_all" onclick="setType('all')">
+            <div class="filter-options" id="typeContainer">
+                <button class="f-btn active" id="type_all" onclick="toggleType('all', this)">
                     <span data-lang-content="he">הכל</span><span data-lang-content="en">All</span>
                 </button>
-                <button class="f-btn" id="type_word" onclick="setType('word')">
+                <button class="f-btn" id="type_word" onclick="toggleType('word', this)">
                     <span data-lang-content="he">מילים</span><span data-lang-content="en">Words</span>
                 </button>
-                <button class="f-btn" id="type_sent_he" onclick="setType('sent_he')">
+                <button class="f-btn" id="type_sent_he" onclick="toggleType('sent_he', this)">
                     <span data-lang-content="he">משפט בעברית</span><span data-lang-content="en">Sentence (He)</span>
                 </button>
-                <button class="f-btn" id="type_sent_en" onclick="setType('sent_en')">
+                <button class="f-btn" id="type_sent_en" onclick="toggleType('sent_en', this)">
                     <span data-lang-content="he">משפט באנגלית</span><span data-lang-content="en">Sentence (En)</span>
                 </button>
-                <button class="f-btn" id="type_sent_both" onclick="setType('sent_both')">
+                <button class="f-btn" id="type_sent_both" onclick="toggleType('sent_both', this)">
                     <span data-lang-content="he">משפט בשניהם</span><span data-lang-content="en">Sentence (Both)</span>
                 </button>
             </div>
@@ -186,15 +185,13 @@
 <script>
     const SHEET_ID = '1D8mPNKBN12uzYOu7HYaxU7trInECv7k5jBl0GnugG3o';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-    
-    // רשימה מורחבת לצינזור
     const BANNED = ['shit','fuck','bitch','ass','damn','dick','pussy','nigger','nigga','faggot','bastard','slut','whore'];
 
     let rawData = [];
     let state = {
         lang: 'he',
         kids: false,
-        type: 'all',
+        types: new Set(['all']),
         posHe: new Set(['all']),
         posEn: new Set(['all']),
         tab: 'A',
@@ -224,7 +221,7 @@
             }).filter(i => i.he);
             renderStructure();
             filter();
-        } catch (e) { console.error("Load error:", e); }
+        } catch (e) { console.error("Error:", e); }
     }
 
     function renderStructure() {
@@ -234,7 +231,6 @@
             const div = document.createElement('div');
             div.id = `tab${l}`;
             div.className = `tab-content ${state.tab === l ? 'active' : ''}`;
-            
             div.innerHTML = `
                 <div class="sub-tabs">
                     <button class="sub-btn" onclick="showSub('${l}', '1', this)">★ 1</button>
@@ -255,20 +251,40 @@
     }
 
     function fillTables() {
-        rawData.sort((a,b) => a.he.localeCompare(b.he, 'he')).forEach(item => {
-            const targets = [`${item.list}ALL`, `${item.list}${item.stars}`, `ALLALL`, `ALL${item.stars}`];
-            targets.forEach(t => {
-                const tbody = document.querySelector(`#sub${t} tbody`);
+        // מיון אלפביתי בעברית
+        const sorted = [...rawData].sort((a,b) => a.he.localeCompare(b.he, 'he'));
+        
+        ['A', 'B', 'C', 'ALL'].forEach(listKey => {
+            ['1','2','3','ALL'].forEach(starKey => {
+                const tbody = document.querySelector(`#sub${listKey}${starKey} tbody`);
                 if (!tbody) return;
-                const tr = document.createElement('tr');
-                tr.className = 'item-row';
-                tr.dataset.spaceHe = item.hasSpaceHe;
-                tr.dataset.spaceEn = item.hasSpaceEn;
-                tr.dataset.posHe = item.posHe;
-                tr.dataset.posEn = item.posEn;
-                tr.dataset.profane = item.isProfane;
-                tr.innerHTML = `<td>${item.he}<span class="tag">${item.posHe}</span></td><td>${item.en}<span class="tag">${item.posEn}</span></td>`;
-                tbody.appendChild(tr);
+
+                let lastLetter = '';
+                sorted.forEach(item => {
+                    const matchTab = listKey === 'ALL' || item.list === listKey;
+                    const matchStar = starKey === 'ALL' || item.stars === starKey;
+
+                    if (matchTab && matchStar) {
+                        const currentLetter = item.he.trim().charAt(0);
+                        if (currentLetter !== lastLetter) {
+                            const trL = document.createElement('tr');
+                            trL.className = 'letter-row';
+                            trL.innerHTML = `<td colspan="2" class="letter-divider">${currentLetter}</td>`;
+                            tbody.appendChild(trL);
+                            lastLetter = currentLetter;
+                        }
+
+                        const tr = document.createElement('tr');
+                        tr.className = 'item-row';
+                        tr.dataset.spaceHe = item.hasSpaceHe;
+                        tr.dataset.spaceEn = item.hasSpaceEn;
+                        tr.dataset.posHe = item.posHe;
+                        tr.dataset.posEn = item.posEn;
+                        tr.dataset.profane = item.isProfane;
+                        tr.innerHTML = `<td>${item.he}<span class="tag">${item.posHe}</span></td><td>${item.en}<span class="tag">${item.posEn}</span></td>`;
+                        tbody.appendChild(tr);
+                    }
+                });
             });
         });
     }
@@ -277,27 +293,23 @@
         const q = document.getElementById('searchInput').value.toLowerCase();
         let visibleCount = 0;
         
-        document.querySelectorAll('.item-row').forEach(row => {
-            const isVisibleSub = row.closest('.sub-content').classList.contains('active');
-            if (!isVisibleSub) return;
-
-            // סינון צינזור (מצב ילדים)
+        document.querySelectorAll('.sub-content.active .item-row').forEach(row => {
             if (state.kids && row.dataset.profane === 'true') {
                 row.style.display = 'none';
                 return;
             }
 
-            // סינון סוג תוכן
+            // סינון סוגי תוכן מרובים
             const spHe = row.dataset.spaceHe === 'true';
             const spEn = row.dataset.spaceEn === 'true';
-            let matchType = false;
-            if (state.type === 'all') matchType = true;
-            else if (state.type === 'word' && !spHe && !spEn) matchType = true;
-            else if (state.type === 'sent_he' && spHe) matchType = true;
-            else if (state.type === 'sent_en' && spEn) matchType = true;
-            else if (state.type === 'sent_both' && spHe && spEn) matchType = true;
+            let matchType = state.types.has('all');
+            if (!matchType) {
+                if (state.types.has('word') && !spHe && !spEn) matchType = true;
+                if (state.types.has('sent_he') && spHe) matchType = true;
+                if (state.types.has('sent_en') && spEn) matchType = true;
+                if (state.types.has('sent_both') && spHe && spEn) matchType = true;
+            }
             
-            // סינון חלקי דיבור
             const matchPosHe = state.posHe.has('all') || [...state.posHe].some(p => row.dataset.posHe.includes(p));
             const matchPosEn = state.posEn.has('all') || [...state.posEn].some(p => row.dataset.posEn.includes(p));
             const matchSearch = row.innerText.toLowerCase().includes(q);
@@ -309,28 +321,32 @@
                 row.style.display = 'none';
             }
         });
+
+        // הסתרת אותיות ריקות
+        document.querySelectorAll('.sub-content.active .letter-row').forEach(lRow => {
+            let next = lRow.nextElementSibling;
+            let hasVisible = false;
+            while(next && next.classList.contains('item-row')) {
+                if(next.style.display !== 'none') { hasVisible = true; break; }
+                next = next.nextElementSibling;
+            }
+            lRow.style.display = hasVisible ? '' : 'none';
+        });
+
         document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
     }
 
-    function toggleLang() {
-        state.lang = state.lang === 'he' ? 'en' : 'he';
-        document.getElementById('mainHtml').lang = state.lang;
-        document.getElementById('mainHtml').dir = state.lang === 'he' ? 'rtl' : 'ltr';
-        filter();
-    }
-
-    function toggleKids() {
-        state.kids = !state.kids;
-        const btn = document.getElementById('kidsBtn');
-        btn.classList.toggle('active');
-        document.getElementById('kidsTextHe').innerText = state.kids ? "👶 מצב ילדים: פעיל" : "👶 מצב ילדים: כבוי";
-        document.getElementById('kidsTextEn').innerText = state.kids ? "👶 Kids Mode: ON" : "👶 Kids Mode: OFF";
-        filter();
-    }
-
-    function setType(t) {
-        state.type = t;
-        document.querySelectorAll('.filter-group:nth-child(2) .f-btn').forEach(b => b.classList.toggle('active', b.id === `type_${t}`));
+    function toggleType(val, btn) {
+        if (val === 'all') state.types = new Set(['all']);
+        else {
+            state.types.delete('all');
+            state.types.has(val) ? state.types.delete(val) : state.types.add(val);
+            if (state.types.size === 0) state.types.add('all');
+        }
+        document.querySelectorAll('#typeContainer .f-btn').forEach(b => {
+            const bVal = b.id.replace('type_','');
+            b.classList.toggle('active', state.types.has(bVal));
+        });
         filter();
     }
 
@@ -342,7 +358,7 @@
             if (state.posHe.size === 0) state.posHe.add('all');
         }
         document.querySelectorAll('.pos-he').forEach(b => {
-            const bVal = b.id.replace('he_pos_','').replace('all','all').replace('noun','שם עצם').replace('adj','שם תואר').replace('verb','פועל');
+            const bVal = b.id === 'he_pos_all' ? 'all' : (b.id === 'he_pos_noun' ? 'שם עצם' : (b.id === 'he_pos_adj' ? 'שם תואר' : 'פועל'));
             b.classList.toggle('active', state.posHe.has(bVal));
         });
         filter();
@@ -356,9 +372,24 @@
             if (state.posEn.size === 0) state.posEn.add('all');
         }
         document.querySelectorAll('.pos-en').forEach(b => {
-            const bVal = b.id.replace('en_pos_','').replace('all','all').replace('noun','שם עצם').replace('adj','שם תואר').replace('verb','פועל');
+            const bVal = b.id === 'en_pos_all' ? 'all' : (b.id === 'en_pos_noun' ? 'שם עצם' : (b.id === 'en_pos_adj' ? 'שם תואר' : 'פועל'));
             b.classList.toggle('active', state.posEn.has(bVal));
         });
+        filter();
+    }
+
+    function toggleLang() {
+        state.lang = state.lang === 'he' ? 'en' : 'he';
+        document.getElementById('mainHtml').lang = state.lang;
+        document.getElementById('mainHtml').dir = state.lang === 'he' ? 'rtl' : 'ltr';
+        filter();
+    }
+
+    function toggleKids() {
+        state.kids = !state.kids;
+        document.getElementById('kidsBtn').classList.toggle('active');
+        document.getElementById('kidsTextHe').innerText = state.kids ? "👶 מצב ילדים: פעיל" : "👶 מצב ילדים: כבוי";
+        document.getElementById('kidsTextEn').innerText = state.kids ? "👶 Kids Mode: ON" : "👶 Kids Mode: OFF";
         filter();
     }
 
@@ -383,6 +414,5 @@
 
     load();
 </script>
-
 </body>
 </html>
