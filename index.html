@@ -50,7 +50,7 @@
         .tab-btn { padding: 10px 18px; cursor: pointer; border: none; background: var(--tab-bg); border-radius: 20px; font-weight: bold; color: var(--text-color); }
         .tab-btn.active { background: var(--primary-blue); color: white; }
         
-        .sub-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; }
+        .sub-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; flex-direction: row-reverse; } /* כיוון הפוך כדי ש"הכל" יהיה משמאל */
         .sub-btn { padding: 5px 12px; cursor: pointer; border: 1px solid var(--border-color); background: transparent; border-radius: 10px; font-size: 13px; color: var(--text-color); }
         .sub-btn.active { background: #fbbc05; border-color: #fbbc05; color: black; font-weight: bold; }
 
@@ -59,7 +59,7 @@
         
         table { width: 100%; border-collapse: collapse; background: var(--container-bg); }
         td { border: 1px solid var(--border-color); padding: 12px; text-align: center; width: 50%; }
-        .tag { font-size: 0.7em; color: #888; display: block; margin-top: 4px; }
+        .tag { font-size: 0.75em; color: #888; display: block; margin-top: 4px; }
         .no-results { text-align: center; padding: 30px; color: #888; display: none; }
     </style>
 </head>
@@ -84,27 +84,29 @@
             <div class="filter-options">
                 <button class="f-btn active" id="type_all" onclick="setType('all')">הכל</button>
                 <button class="f-btn" id="type_word" onclick="setType('word')">מילים</button>
-                <button class="f-btn" id="type_sent" onclick="setType('sent')">משפטים</button>
+                <button class="f-btn" id="type_sent_he" onclick="setType('sent_he')">משפט בעברית</button>
+                <button class="f-btn" id="type_sent_en" onclick="setType('sent_en')">משפט באנגלית</button>
+                <button class="f-btn" id="type_sent_both" onclick="setType('sent_both')">משפט בשניהם</button>
             </div>
         </div>
 
         <div class="filter-group">
             <div class="filter-label" id="l_pos_he">חלק דיבור (עברית):</div>
             <div class="filter-options" id="posHeContainer">
-                <button class="f-btn pos-he active" onclick="togglePosHe('all', this)">הכל</button>
-                <button class="f-btn pos-he" onclick="togglePosHe('שם עצם', this)">שם עצם</button>
-                <button class="f-btn pos-he" onclick="togglePosHe('שם תואר', this)">שם תואר</button>
-                <button class="f-btn pos-he" onclick="togglePosHe('פועל', this)">פועל</button>
+                <button class="f-btn pos-he active" id="he_pos_all" onclick="togglePosHe('all', this)">הכל</button>
+                <button class="f-btn pos-he" id="he_pos_noun" onclick="togglePosHe('שם עצם', this)">שם עצם</button>
+                <button class="f-btn pos-he" id="he_pos_adj" onclick="togglePosHe('שם תואר', this)">שם תואר</button>
+                <button class="f-btn pos-he" id="he_pos_verb" onclick="togglePosHe('פועל', this)">פועל</button>
             </div>
         </div>
 
         <div class="filter-group">
             <div class="filter-label" id="l_pos_en">חלק דיבור (אנגלית):</div>
             <div class="filter-options" id="posEnContainer">
-                <button class="f-btn pos-en active" onclick="togglePosEn('all', this)">הכל</button>
-                <button class="f-btn pos-en" onclick="togglePosEn('שם עצם', this)">שם עצם</button>
-                <button class="f-btn pos-en" onclick="togglePosEn('שם תואר', this)">שם תואר</button>
-                <button class="f-btn pos-en" onclick="togglePosEn('פועל', this)">פועל</button>
+                <button class="f-btn pos-en active" id="en_pos_all" onclick="togglePosEn('all', this)">הכל</button>
+                <button class="f-btn pos-en" id="en_pos_noun" onclick="togglePosEn('שם עצם', this)">שם עצם</button>
+                <button class="f-btn pos-en" id="en_pos_adj" onclick="togglePosEn('שם תואר', this)">שם תואר</button>
+                <button class="f-btn pos-en" id="en_pos_verb" onclick="togglePosEn('פועל', this)">פועל</button>
             </div>
         </div>
     </div>
@@ -136,8 +138,8 @@
     };
 
     const UI = {
-        he: { title: "ניהול רשימות heb2ing", search: "חפש מילה...", type: "סוג תוכן:", posHe: "חלק דיבור (עברית):", posEn: "חלק דיבור (אנגלית):", tA: "רשימה א'", tB: "רשימה ב'", tC: "רשימה ג'", tAll: "הכל", kidsOff: "👶 מצב ילדים: כבוי", kidsOn: "👶 מצב ילדים: פעיל", all: "הכל", word: "מילים", sent: "משפטים", noun: "שם עצם", adj: "שם תואר", verb: "פועל" },
-        en: { title: "heb2ing Lists", search: "Search word...", type: "Content Type:", posHe: "POS (Hebrew):", posEn: "POS (English):", tA: "List A", tB: "List B", tC: "List C", tAll: "All", kidsOff: "👶 Kids Mode: OFF", kidsOn: "👶 Kids Mode: ON", all: "All", word: "Words", sent: "Sentences", noun: "Noun", adj: "Adjective", verb: "Verb" }
+        he: { title: "ניהול רשימות heb2ing", search: "חפש מילה...", type: "סוג תוכן:", posHe: "חלק דיבור (עברית):", posEn: "חלק דיבור (אנגלית):", tA: "רשימה א'", tB: "רשימה ב'", tC: "רשימה ג'", tAll: "הכל", kidsOff: "👶 מצב ילדים: כבוי", kidsOn: "👶 מצב ילדים: פעיל", all: "הכל", word: "מילים", sentHe: "משפט בעברית", sentEn: "משפט באנגלית", sentBoth: "משפט בשניהם", noun: "שם עצם", adj: "שם תואר", verb: "פועל", allStars: "כל הכוכבים" },
+        en: { title: "heb2ing Lists", search: "Search word...", type: "Content Type:", posHe: "POS (Hebrew):", posEn: "POS (English):", tA: "List A", tB: "List B", tC: "List C", tAll: "All", kidsOff: "👶 Kids Mode: OFF", kidsOn: "👶 Kids Mode: ON", all: "All", word: "Words", sentHe: "Sentence (He)", sentEn: "Sentence (En)", sentBoth: "Sentence (Both)", noun: "Noun", adj: "Adjective", verb: "Verb", allStars: "All Stars" }
     };
 
     async function load() {
@@ -148,19 +150,22 @@
             rawData = rows.map(r => {
                 const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
                 const pos = (c[4] || "").split(',');
+                const he = c[0] || '';
+                const en = c[1] || '';
                 return {
-                    he: c[0] || '', en: c[1] || '',
+                    he: he, en: en,
                     list: (c[2] || 'א').includes('א') ? 'A' : (c[2] || 'ב').includes('ב') ? 'B' : 'C',
                     stars: c[3] || '3',
                     posHe: (pos[0] || "").trim(),
                     posEn: (pos[1] || "").trim(),
-                    isSent: (c[0] + (c[1] || "")).includes(' '),
-                    profane: ['shit','fuck','bitch','ass'].some(w => (c[0]+c[1]).toLowerCase().includes(w))
+                    hasSpaceHe: he.includes(' '),
+                    hasSpaceEn: en.includes(' '),
+                    profane: ['shit','fuck','bitch','ass','damn','dick','pussy'].some(w => (he+en).toLowerCase().includes(w))
                 };
             }).filter(i => i.he);
             renderStructure();
             filter();
-        } catch (e) { alert("שגיאה בטעינת הנתונים"); }
+        } catch (e) { console.error(e); }
     }
 
     function renderStructure() {
@@ -172,16 +177,16 @@
             div.className = `tab-content ${state.tab === l ? 'active' : ''}`;
             
             const subTabs = `<div class="sub-tabs">
-                <button class="sub-btn active" onclick="showSub('${l}', 'ALL', this)">כל הכוכבים</button>
                 <button class="sub-btn" onclick="showSub('${l}', '1', this)">★ 1</button>
                 <button class="sub-btn" onclick="showSub('${l}', '2', this)">★★ 2</button>
                 <button class="sub-btn" onclick="showSub('${l}', '3', this)">★★★ 3</button>
+                <button class="sub-btn active" id="sub_all_${l}" onclick="showSub('${l}', 'ALL', this)">כל הכוכבים</button>
             </div>`;
             
-            const contents = `<div id="sub${l}ALL" class="sub-content active"><table><tbody></tbody></table></div>
-                              <div id="sub${l}1" class="sub-content"><table><tbody></tbody></table></div>
+            const contents = `<div id="sub${l}1" class="sub-content"><table><tbody></tbody></table></div>
                               <div id="sub${l}2" class="sub-content"><table><tbody></tbody></table></div>
-                              <div id="sub${l}3" class="sub-content"><table><tbody></tbody></table></div>`;
+                              <div id="sub${l}3" class="sub-content"><table><tbody></tbody></table></div>
+                              <div id="sub${l}ALL" class="sub-content active"><table><tbody></tbody></table></div>`;
             
             div.innerHTML = subTabs + contents;
             area.appendChild(div);
@@ -197,7 +202,8 @@
                 if (!tbody) return;
                 const tr = document.createElement('tr');
                 tr.className = 'item-row';
-                tr.dataset.type = item.isSent ? 'sent' : 'word';
+                tr.dataset.spaceHe = item.hasSpaceHe;
+                tr.dataset.spaceEn = item.hasSpaceEn;
                 tr.dataset.posHe = item.posHe;
                 tr.dataset.posEn = item.posEn;
                 tr.dataset.profane = item.profane;
@@ -215,14 +221,30 @@
             const isVisibleSub = row.closest('.sub-content').classList.contains('active');
             if (!isVisibleSub) return;
 
+            // סינון חיפוש
             const matchSearch = row.innerText.toLowerCase().includes(q);
-            const matchType = state.type === 'all' || row.dataset.type === state.type;
-            const matchKids = !state.kids || row.dataset.profane === 'false';
             
+            // סינון מצב ילדים - אם דלוק, אסור שיהיה profane
+            if (state.kids && row.dataset.profane === 'true') {
+                row.style.display = 'none';
+                return;
+            }
+
+            // סינון סוג תוכן
+            let matchType = false;
+            const spHe = row.dataset.spaceHe === 'true';
+            const spEn = row.dataset.spaceEn === 'true';
+            if (state.type === 'all') matchType = true;
+            else if (state.type === 'word' && !spHe && !spEn) matchType = true;
+            else if (state.type === 'sent_he' && spHe) matchType = true;
+            else if (state.type === 'sent_en' && spEn) matchType = true;
+            else if (state.type === 'sent_both' && spHe && spEn) matchType = true;
+            
+            // סינון חלקי דיבור
             const matchPosHe = state.posHe.has('all') || [...state.posHe].some(p => row.dataset.posHe.includes(p));
             const matchPosEn = state.posEn.has('all') || [...state.posEn].some(p => row.dataset.posEn.includes(p));
 
-            if (matchSearch && matchType && matchKids && matchPosHe && matchPosEn) {
+            if (matchSearch && matchType && matchPosHe && matchPosEn) {
                 row.style.display = '';
                 visibleCount++;
             } else {
@@ -232,7 +254,6 @@
         document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
     }
 
-    // ניהול מצבים
     function toggleLang() {
         state.lang = state.lang === 'he' ? 'en' : 'he';
         const s = UI[state.lang];
@@ -247,25 +268,42 @@
         document.getElementById('tB').innerText = s.tB;
         document.getElementById('tC').innerText = s.tC;
         document.getElementById('tAll').innerText = s.tAll;
+        
+        // עדכון טקסט כפתורי סינון לפי ID כדי שלא יזוזו
         document.getElementById('type_all').innerText = s.all;
         document.getElementById('type_word').innerText = s.word;
-        document.getElementById('type_sent').innerText = s.sent;
-        // עדכון כפתורי חלקי דיבור
-        document.querySelectorAll('.pos-he').forEach((b, i) => b.innerText = [s.all, s.noun, s.adj, s.verb][i]);
-        document.querySelectorAll('.pos-en').forEach((b, i) => b.innerText = [s.all, s.noun, s.adj, s.verb][i]);
+        document.getElementById('type_sent_he').innerText = s.sentHe;
+        document.getElementById('type_sent_en').innerText = s.sentEn;
+        document.getElementById('type_sent_both').innerText = s.sentBoth;
+
+        document.getElementById('he_pos_all').innerText = s.all;
+        document.getElementById('he_pos_noun').innerText = s.noun;
+        document.getElementById('he_pos_adj').innerText = s.adj;
+        document.getElementById('he_pos_verb').innerText = s.verb;
+
+        document.getElementById('en_pos_all').innerText = s.all;
+        document.getElementById('en_pos_noun').innerText = s.noun;
+        document.getElementById('en_pos_adj').innerText = s.adj;
+        document.getElementById('en_pos_verb').innerText = s.verb;
+
+        document.querySelectorAll('[id^="sub_all_"]').forEach(btn => btn.innerText = s.allStars);
+        
+        document.getElementById('kidsBtn').innerText = state.kids ? s.kidsOn : s.kidsOff;
         filter();
     }
 
     function toggleKids() {
         state.kids = !state.kids;
-        document.getElementById('kidsBtn').innerText = state.kids ? UI[state.lang].kidsOn : UI[state.lang].kidsOff;
+        const s = UI[state.lang];
+        document.getElementById('kidsBtn').innerText = state.kids ? s.kidsOn : s.kidsOff;
         document.getElementById('kidsBtn').classList.toggle('active');
         filter();
     }
 
     function setType(t) {
         state.type = t;
-        document.querySelectorAll('.filter-group:first-of-type .f-btn').forEach(b => b.classList.toggle('active', b.id === `type_${t}`));
+        document.querySelectorAll('.filter-group:nth-child(2) .f-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`type_${t}`).classList.add('active');
         filter();
     }
 
@@ -279,7 +317,9 @@
             if (state.posHe.size === 0) state.posHe.add('all');
         }
         document.querySelectorAll('.pos-he').forEach(b => {
-            const bVal = b.getAttribute('onclick').match(/'([^']+)'/)[1];
+            const bVal = b.id === 'he_pos_all' ? 'all' : 
+                         b.id === 'he_pos_noun' ? 'שם עצם' :
+                         b.id === 'he_pos_adj' ? 'שם תואר' : 'פועל';
             b.classList.toggle('active', state.posHe.has(bVal));
         });
         filter();
@@ -295,7 +335,9 @@
             if (state.posEn.size === 0) state.posEn.add('all');
         }
         document.querySelectorAll('.pos-en').forEach(b => {
-            const bVal = b.getAttribute('onclick').match(/'([^']+)'/)[1];
+            const bVal = b.id === 'en_pos_all' ? 'all' : 
+                         b.id === 'en_pos_noun' ? 'שם עצם' :
+                         b.id === 'en_pos_adj' ? 'שם תואר' : 'פועל';
             b.classList.toggle('active', state.posEn.has(bVal));
         });
         filter();
