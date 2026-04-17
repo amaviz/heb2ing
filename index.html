@@ -13,6 +13,7 @@
             --tab-bg: #e0e0e0;
             --primary-blue: #1a73e8;
             --kids-pink: #ff6b6b;
+            --accent-green: #34a853;
         }
 
         .dark-mode {
@@ -27,16 +28,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
         .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
-        /* Top Bar - Fixed Layout */
-        .top-bar { 
-            display: flex !important; 
-            justify-content: space-between !important; 
-            flex-direction: row !important; 
-            direction: ltr !important; 
-            margin-bottom: 15px; 
-            gap: 10px;
-        }
-        
+        .top-bar { display: flex !important; justify-content: space-between !important; flex-direction: row !important; direction: ltr !important; margin-bottom: 15px; gap: 10px; }
         .top-btn { padding: 8px 15px; cursor: pointer; border-radius: 20px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); font-weight: bold; transition: 0.3s; }
         .top-btn:hover { background: var(--primary-blue); color: white; }
         
@@ -48,9 +40,12 @@
         .search-area { width: 100%; max-width: 400px; display: flex; gap: 5px; align-items: center; }
         .search-box { flex-grow: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background: var(--container-bg); color: var(--text-color); }
         
+        .filter-group { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; border-top: 1px solid var(--border-color); pt: 10px; padding-top: 10px; }
+        .filter-label { font-size: 0.9em; font-weight: bold; color: var(--primary-blue); }
         .filter-options { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
         .filter-btn { padding: 6px 14px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); border-radius: 15px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; }
         .filter-btn.active { background: var(--primary-blue); color: white; }
+        .pos-btn.active { background: var(--accent-green); border-color: var(--accent-green); }
 
         .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-button, .sub-tab-button { padding: 10px 20px; cursor: pointer; border: none; background: var(--tab-bg); color: var(--text-color); border-radius: 25px; font-weight: bold; transition: 0.3s; font-size: 15px; }
@@ -91,12 +86,24 @@
             <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה ברשימה זו..." onkeyup="filterTables()">
         </div>
         
-        <div class="filter-options">
-            <button class="filter-btn active" id="btn_all" onclick="toggleWordFilter('all', this)">הכל</button>
-            <button class="filter-btn" id="btn_word" onclick="toggleWordFilter('word_only', this)">מילים בודדות</button>
-            <button class="filter-btn" id="btn_sent_he" onclick="toggleWordFilter('sent_he', this)">משפט בעברית</button>
-            <button class="filter-btn" id="btn_sent_en" onclick="toggleWordFilter('sent_en', this)">משפט באנגלית</button>
-            <button class="filter-btn" id="btn_sent_both" onclick="toggleWordFilter('sent_both', this)">משפט בשניהם</button>
+        <div class="filter-group">
+            <div class="filter-label" id="lbl_type_filter">סוג תוכן:</div>
+            <div class="filter-options">
+                <button class="filter-btn active" id="btn_all" onclick="toggleWordFilter('all', this)">הכל</button>
+                <button class="filter-btn" id="btn_word" onclick="toggleWordFilter('word_only', this)">מילים בודדות</button>
+                <button class="filter-btn" id="btn_sent_he" onclick="toggleWordFilter('sent_he', this)">משפט בעברית</button>
+                <button class="filter-btn" id="btn_sent_en" onclick="toggleWordFilter('sent_en', this)">משפט באנגלית</button>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-label" id="lbl_pos_filter">חלקי דיבור:</div>
+            <div class="filter-options" id="posFilterContainer">
+                <button class="filter-btn pos-btn active" id="btn_pos_all" onclick="togglePosFilter('all', this)">הכל</button>
+                <button class="filter-btn pos-btn" onclick="togglePosFilter('שם עצם', this)">שם עצם</button>
+                <button class="filter-btn pos-btn" onclick="togglePosFilter('שם תואר', this)">שם תואר</button>
+                <button class="filter-btn pos-btn" onclick="togglePosFilter('פועל', this)">פועל</button>
+            </div>
         </div>
 
         <div class="sort-options">
@@ -131,18 +138,18 @@
     const SHEET_ID = '1D8mPNKBN12uzYOu7HYaxU7trInECv7k5jBl0GnugG3o';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
     
-    // רשימת צנזורה
     const badWords = ['shit', 'fuck', 'bitch', 'ass', 'damn', 'nigger', 'nigga']; 
     
     let allData = [];
     let currentSort = 'he';
-    let selectedFilters = new Set(['all']); 
+    let selectedTypeFilters = new Set(['all']); 
+    let selectedPosFilters = new Set(['all']); 
     let currentLang = 'he';
     let kidsMode = false;
 
     const trans = {
-        he: { title: "ניהול רשימות heb2ing", search: "חפש מילה ברשימה זו...", all: "הכל", word_only: "מילים בודדות", sent_he: "משפט בעברית", sent_en: "משפט באנגלית", sent_both: "משפט בשניהם", sort_he: 'א"ב עברי', sort_en: "A-Z (אנגלי)", tabA: "רשימה א'", tabB: "רשימה ב'", tabC: "רשימה ג'", tabAll: "כל המילים", loading: "טוען נתונים...", no_results: "לא נמצאה מילה מתאימה", stars_all: "הכל", list_prefix: "רשימה", kids_on: "👶 מצב ילדים: פעיל", kids_off: "👶 מצב ילדים: כבוי" },
-        en: { title: "List Management heb2ing", search: "Search word in this list...", all: "All", word_only: "Single Words", sent_he: "Sentence (Heb)", sent_en: "Sentence (Eng)", sent_both: "Sentence (Both)", sort_he: "Hebrew A-B", sort_en: "English A-Z", tabA: "List A", tabB: "List B", tabC: "List C", tabAll: "All Words", loading: "Loading data...", no_results: "No matching words found", stars_all: "All", list_prefix: "List", kids_on: "👶 Kids Mode: ON", kids_off: "👶 Kids Mode: OFF" }
+        he: { title: "ניהול רשימות heb2ing", search: "חפש מילה ברשימה זו...", all: "הכל", word_only: "מילים בודדות", sent_he: "משפט בעברית", sent_en: "משפט באנגלית", sort_he: 'א"ב עברי', sort_en: "A-Z (אנגלי)", tabA: "רשימה א'", tabB: "רשימה ב'", tabC: "רשימה ג'", tabAll: "כל המילים", loading: "טוען נתונים...", no_results: "לא נמצאה מילה מתאימה", stars_all: "הכל", list_prefix: "רשימה", kids_on: "👶 מצב ילדים: פעיל", kids_off: "👶 מצב ילדים: כבוי", lbl_type: "סוג תוכן:", lbl_pos: "חלקי דיבור:" },
+        en: { title: "List Management heb2ing", search: "Search word in this list...", all: "All", word_only: "Single Words", sent_he: "Sentence (Heb)", sent_en: "Sentence (Eng)", sort_he: "Hebrew A-B", sort_en: "English A-Z", tabA: "List A", tabB: "List B", tabC: "List C", tabAll: "All Words", loading: "Loading data...", no_results: "No matching words found", stars_all: "All", list_prefix: "List", kids_on: "👶 Kids Mode: ON", kids_off: "👶 Kids Mode: OFF", lbl_type: "Content Type:", lbl_pos: "Parts of Speech:" }
     };
 
     function toggleKidsMode() {
@@ -160,12 +167,11 @@
         document.getElementById('mainTitle').innerText = trans[currentLang].title;
         document.getElementById('searchInput').placeholder = trans[currentLang].search;
         document.getElementById('kidsBtn').innerText = kidsMode ? trans[currentLang].kids_on : trans[currentLang].kids_off;
+        document.getElementById('lbl_type_filter').innerText = trans[currentLang].lbl_type;
+        document.getElementById('lbl_pos_filter').innerText = trans[currentLang].lbl_pos;
         
         document.getElementById('btn_all').innerText = trans[currentLang].all;
-        document.getElementById('btn_word').innerText = trans[currentLang].word_only;
-        document.getElementById('btn_sent_he').innerText = trans[currentLang].sent_he;
-        document.getElementById('btn_sent_en').innerText = trans[currentLang].sent_en;
-        document.getElementById('btn_sent_both').innerText = trans[currentLang].sent_both;
+        document.getElementById('btn_pos_all').innerText = trans[currentLang].all;
         
         document.getElementById('lbl_sort_he').innerText = trans[currentLang].sort_he;
         document.getElementById('lbl_sort_en').innerText = trans[currentLang].sort_en;
@@ -201,6 +207,7 @@
 
                 return { 
                     he: cols[0] || '', en: cols[1] || '', type: mappedType, rawLetter: rawLetter, stars: cols[3] || '3',
+                    pos: cols[4] || '', // עמודה E - חלק דיבור
                     hasSpaceHe: cols[0].trim().includes(' '), hasSpaceEn: cols[1].trim().includes(' '),
                     isProfane: isProfane
                 };
@@ -232,15 +239,30 @@
 
     function toggleWordFilter(type, btn) {
         if (type === 'all') {
-            selectedFilters.clear(); selectedFilters.add('all');
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            selectedTypeFilters.clear(); selectedTypeFilters.add('all');
+            document.querySelectorAll('.filter-btn:not(.pos-btn)').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         } else {
-            selectedFilters.delete('all');
+            selectedTypeFilters.delete('all');
             document.getElementById('btn_all').classList.remove('active');
-            if (selectedFilters.has(type)) { selectedFilters.delete(type); btn.classList.remove('active'); }
-            else { selectedFilters.add(type); btn.classList.add('active'); }
-            if (selectedFilters.size === 0) { selectedFilters.add('all'); document.getElementById('btn_all').classList.add('active'); }
+            if (selectedTypeFilters.has(type)) { selectedTypeFilters.delete(type); btn.classList.remove('active'); }
+            else { selectedTypeFilters.add(type); btn.classList.add('active'); }
+            if (selectedTypeFilters.size === 0) { selectedTypeFilters.add('all'); document.getElementById('btn_all').classList.add('active'); }
+        }
+        filterTables();
+    }
+
+    function togglePosFilter(pos, btn) {
+        if (pos === 'all') {
+            selectedPosFilters.clear(); selectedPosFilters.add('all');
+            document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        } else {
+            selectedPosFilters.delete('all');
+            document.getElementById('btn_pos_all').classList.remove('active');
+            if (selectedPosFilters.has(pos)) { selectedPosFilters.delete(pos); btn.classList.remove('active'); }
+            else { selectedPosFilters.add(pos); btn.classList.add('active'); }
+            if (selectedPosFilters.size === 0) { selectedPosFilters.add('all'); document.getElementById('btn_pos_all').classList.add('active'); }
         }
         filterTables();
     }
@@ -273,6 +295,7 @@
                 tr.setAttribute('data-raw-letter', item.rawLetter);
                 tr.setAttribute('data-stars', item.stars);
                 tr.setAttribute('data-is-profane', item.isProfane);
+                tr.setAttribute('data-pos', item.pos);
                 tr.setAttribute('data-belongs-to-letter', firstChar);
                 tr.innerHTML = `<td><span class="word-text">${item.he}</span><span class="info-tag"></span></td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
@@ -290,28 +313,35 @@
         document.querySelectorAll(".data-row").forEach(r => {
             const isVisibleTable = (r.getAttribute('data-parent-id') === currentId);
             const isProfane = r.getAttribute('data-is-profane') === 'true';
-            
             if (kidsMode && isProfane) { r.style.display = "none"; return; }
 
+            // סינון לפי סוג תוכן
             const spaceHe = r.getAttribute('data-space-he') === 'true';
             const spaceEn = r.getAttribute('data-space-en') === 'true';
-            let matchesType = selectedFilters.has('all');
+            let matchesType = selectedTypeFilters.has('all');
             if (!matchesType) {
-                if (selectedFilters.has('word_only') && (!spaceHe && !spaceEn)) matchesType = true;
-                if (selectedFilters.has('sent_he') && spaceHe) matchesType = true;
-                if (selectedFilters.has('sent_en') && spaceEn) matchesType = true;
-                if (selectedFilters.has('sent_both') && (spaceHe && spaceEn)) matchesType = true;
+                if (selectedTypeFilters.has('word_only') && (!spaceHe && !spaceEn)) matchesType = true;
+                if (selectedTypeFilters.has('sent_he') && spaceHe) matchesType = true;
+                if (selectedTypeFilters.has('sent_en') && spaceEn) matchesType = true;
             }
 
-            if (r.innerText.toLowerCase().includes(q) && isVisibleTable && matchesType) {
+            // סינון לפי חלק דיבור
+            const itemPos = r.getAttribute('data-pos');
+            let matchesPos = selectedPosFilters.has('all');
+            if (!matchesPos) {
+                if (selectedPosFilters.has(itemPos)) matchesPos = true;
+            }
+
+            if (r.innerText.toLowerCase().includes(q) && isVisibleTable && matchesType && matchesPos) {
                 r.style.display = "";
                 count++;
                 const infoTag = r.querySelector('.info-tag');
                 const listName = currentLang === 'he' ? r.getAttribute('data-raw-letter') : r.getAttribute('data-type');
-                if (currentId === 'GlobalALL') infoTag.innerText = `${trans[currentLang].list_prefix} ${listName} - ★${r.getAttribute('data-stars')}`;
-                else if (currentId.startsWith('ALL')) infoTag.innerText = `${trans[currentLang].list_prefix} ${listName}`;
-                else if (currentId.includes('_ALL')) infoTag.innerText = `★${r.getAttribute('data-stars')}`;
-                else infoTag.innerText = "";
+                const posTxt = itemPos ? ` | ${itemPos}` : "";
+                if (currentId === 'GlobalALL') infoTag.innerText = `${trans[currentLang].list_prefix} ${listName} - ★${r.getAttribute('data-stars')}${posTxt}`;
+                else if (currentId.startsWith('ALL')) infoTag.innerText = `${trans[currentLang].list_prefix} ${listName}${posTxt}`;
+                else if (currentId.includes('_ALL')) infoTag.innerText = `★${r.getAttribute('data-stars')}${posTxt}`;
+                else infoTag.innerText = itemPos || "";
             } else { r.style.display = "none"; }
         });
         
@@ -321,7 +351,7 @@
             const hasVisible = !!tbody.querySelector(`.data-row[data-belongs-to-letter="${lr.getAttribute('data-letter')}"]:not([style*="display: none"])`);
             lr.style.display = hasVisible ? "" : "none";
         });
-        document.getElementById('noResults').style.display = (count === 0 && (q !== "" || !selectedFilters.has('all') || kidsMode)) ? "block" : "none";
+        document.getElementById('noResults').style.display = (count === 0 && (q !== "" || !selectedTypeFilters.has('all') || !selectedPosFilters.has('all'))) ? "block" : "none";
     }
 
     function openTab(e, id) {
