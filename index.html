@@ -41,18 +41,26 @@
         .search-box { width: 100%; max-width: 400px; padding: 12px 20px; border-radius: 25px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background: var(--container-bg); color: var(--text-color); }
         
         .filter-group { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; border-top: 1px solid var(--border-color); padding-top: 10px; }
+        .filter-header { display: flex; align-items: center; gap: 10px; }
         .filter-label { font-size: 0.9em; font-weight: bold; color: var(--primary-blue); }
-        .filter-options { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
         
+        .lang-toggle-small { display: flex; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; }
+        .lang-toggle-small button { border: none; padding: 2px 8px; font-size: 11px; cursor: pointer; background: var(--tab-bg); color: var(--text-color); }
+        .lang-toggle-small button.active { background: var(--primary-blue); color: white; }
+
+        .filter-options { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
         .filter-btn { padding: 6px 14px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); border-radius: 15px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; }
         .filter-btn.active { background: var(--primary-blue); color: white; }
         .pos-btn.active { background: var(--accent-green); border-color: var(--accent-green); }
 
-        .tabs, .sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-button, .sub-tab-button { padding: 10px 20px; cursor: pointer; border: none; background: var(--tab-bg); color: var(--text-color); border-radius: 25px; font-weight: bold; transition: 0.3s; }
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-button { padding: 10px 20px; cursor: pointer; border: none; background: var(--tab-bg); color: var(--text-color); border-radius: 25px; font-weight: bold; transition: 0.3s; }
         .tab-button.active { background: var(--primary-blue); color: white; }
-        .sub-tab-button.active { background: #fbbc05; color: black; }
         
+        .sub-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; }
+        .sub-tab-button { padding: 5px 15px; cursor: pointer; border: none; background: var(--tab-bg); color: var(--text-color); border-radius: 15px; font-size: 14px; }
+        .sub-tab-button.active { background: #fbbc05; color: black; }
+
         .tab-content, .sub-tab-content { display: none; }
         .tab-content.active, .sub-tab-content.active { display: block; }
         
@@ -92,12 +100,18 @@
         </div>
 
         <div class="filter-group">
-            <div class="filter-label" id="lbl_pos_filter">חלקי דיבור:</div>
-            <div class="filter-options">
+            <div class="filter-header">
+                <div class="filter-label" id="lbl_pos_filter">חלקי דיבור:</div>
+                <div class="lang-toggle-small">
+                    <button id="posLangHe" class="active" onclick="setPosFilterLang('he')">עברית</button>
+                    <button id="posLangEn" onclick="setPosFilterLang('en')">English</button>
+                </div>
+            </div>
+            <div class="filter-options" id="posOptionsContainer">
                 <button class="filter-btn pos-btn active" id="btn_pos_all" onclick="togglePosFilter('all', this)">הכל</button>
-                <button class="filter-btn pos-btn" id="btn_pos_noun" onclick="togglePosFilter('שם עצם', this)">שם עצם</button>
-                <button class="filter-btn pos-btn" id="btn_pos_adj" onclick="togglePosFilter('שם תואר', this)">שם תואר</button>
-                <button class="filter-btn pos-btn" id="btn_pos_verb" onclick="togglePosFilter('פועל', this)">פועל</button>
+                <button class="filter-btn pos-btn" data-he="שם עצם" data-en="Noun" onclick="togglePosFilter(this.dataset[posFilterLang], this)">שם עצם</button>
+                <button class="filter-btn pos-btn" data-he="שם תואר" data-en="Adjective" onclick="togglePosFilter(this.dataset[posFilterLang], this)">שם תואר</button>
+                <button class="filter-btn pos-btn" data-he="פועל" data-en="Verb" onclick="togglePosFilter(this.dataset[posFilterLang], this)">פועל</button>
             </div>
         </div>
 
@@ -119,7 +133,7 @@
     <div id="listC" class="tab-content"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
     <div id="listALL" class="tab-content"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
 
-    <div id="loading" style="text-align:center;">טוען...</div>
+    <div id="loading" style="text-align:center; padding:20px;">טוען...</div>
     <div id="noResults" class="no-results">לא נמצאו תוצאות</div>
 </div>
 
@@ -133,24 +147,30 @@
     let selectedTypeFilters = new Set(['all']); 
     let selectedPosFilters = new Set(['all']); 
     let currentLang = 'he';
+    let posFilterLang = 'he'; // שפת הסינון של חלקי הדיבור
     let kidsMode = false;
 
     const trans = {
-        he: { 
-            title: "ניהול רשימות heb2ing", search: "חפש מילה...", all: "הכל", 
-            word_only: "מילים בודדות", sent_he: "משפט בעברית", sent_en: "משפט באנגלית", sent_both: "משפט בשניהם",
-            noun: "שם עצם", adj: "שם תואר", verb: "פועל",
-            sort_he: 'א"ב עברי', sort_en: "A-Z (אנגלי)", tabA: "רשימה א'", tabB: "רשימה ב'", tabC: "רשימה ג'", tabAll: "כל המילים",
-            kids_on: "👶 מצב ילדים: פעיל", kids_off: "👶 מצב ילדים: כבוי", lbl_type: "סוג תוכן:", lbl_pos: "חלקי דיבור:"
-        },
-        en: { 
-            title: "List Management", search: "Search...", all: "All", 
-            word_only: "Single Words", sent_he: "Sentence (Heb)", sent_en: "Sentence (Eng)", sent_both: "Sentence (Both)",
-            noun: "Noun", adj: "Adjective", verb: "Verb",
-            sort_he: "Hebrew A-B", sort_en: "English A-Z", tabA: "List A", tabB: "List B", tabC: "List C", tabAll: "All Words",
-            kids_on: "👶 Kids Mode: ON", kids_off: "👶 Kids Mode: OFF", lbl_type: "Content Type:", lbl_pos: "Parts of Speech:"
-        }
+        he: { title: "ניהול רשימות heb2ing", search: "חפש מילה...", all: "הכל", word_only: "מילים בודדות", sent_he: "משפט בעברית", sent_en: "משפט באנגלית", sent_both: "משפט בשניהם", sort_he: 'א"ב עברי', sort_en: "A-Z (אנגלי)", tabA: "רשימה א'", tabB: "רשימה ב'", tabC: "רשימה ג'", tabAll: "כל המילים", kids_on: "👶 מצב ילדים: פעיל", kids_off: "👶 מצב ילדים: כבוי", lbl_type: "סוג תוכן:", lbl_pos: "חלקי דיבור:" },
+        en: { title: "List Management", search: "Search...", all: "All", word_only: "Single Words", sent_he: "Sentence (Heb)", sent_en: "Sentence (Eng)", sent_both: "Sentence (Both)", sort_he: "Hebrew A-B", sort_en: "English A-Z", tabA: "List A", tabB: "List B", tabC: "List C", tabAll: "All Words", kids_on: "👶 Kids Mode: ON", kids_off: "👶 Kids Mode: OFF", lbl_type: "Content Type:", lbl_pos: "Parts of Speech:" }
     };
+
+    function setPosFilterLang(lang) {
+        posFilterLang = lang;
+        document.getElementById('posLangHe').classList.toggle('active', lang === 'he');
+        document.getElementById('posLangEn').classList.toggle('active', lang === 'en');
+        
+        // עדכון טקסט הכפתורים לפי השפה שנבחרה לסינון
+        document.querySelectorAll('.pos-btn[data-he]').forEach(btn => {
+            btn.innerText = btn.dataset[lang];
+        });
+        
+        selectedPosFilters.clear();
+        selectedPosFilters.add('all');
+        document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.id === 'btn_pos_all'));
+        
+        filterTables();
+    }
 
     function toggleKidsMode() {
         kidsMode = !kidsMode;
@@ -175,19 +195,12 @@
         document.getElementById('kidsBtn').innerText = kidsMode ? t.kids_on : t.kids_off;
         document.getElementById('lbl_type_filter').innerText = t.lbl_type;
         document.getElementById('lbl_pos_filter').innerText = t.lbl_pos;
-        
-        // עדכון כפתורי סינון
         document.getElementById('btn_all').innerText = t.all;
         document.getElementById('btn_word').innerText = t.word_only;
         document.getElementById('btn_sent_he').innerText = t.sent_he;
         document.getElementById('btn_sent_en').innerText = t.sent_en;
         document.getElementById('btn_sent_both').innerText = t.sent_both;
-        
         document.getElementById('btn_pos_all').innerText = t.all;
-        document.getElementById('btn_pos_noun').innerText = t.noun;
-        document.getElementById('btn_pos_adj').innerText = t.adj;
-        document.getElementById('btn_pos_verb').innerText = t.verb;
-
         document.getElementById('lbl_sort_he').innerText = t.sort_he;
         document.getElementById('lbl_sort_en').innerText = t.sort_en;
         document.getElementById('tabA').innerText = t.tabA;
@@ -209,9 +222,13 @@
                 const content = (cols[0] + " " + cols[1]).toLowerCase();
                 const isProfane = badWords.some(w => new RegExp(`\\b${w}\\b`, 'i').test(content));
 
+                // פיצול חלק הדיבור לעברית ואנגלית (מצפה לפורמט: "שם עצם | Noun")
+                const posParts = (cols[4] || "").split('|').map(p => p.trim());
+                
                 return { 
                     he: cols[0] || '', en: cols[1] || '', type: mappedType, rawLetter: rawLetter, stars: cols[3] || '3',
-                    pos: cols[4] || '', 
+                    posHe: posParts[0] || '', 
+                    posEn: posParts[1] || '',
                     hasSpaceHe: cols[0].trim().includes(' '), hasSpaceEn: cols[1].trim().includes(' '),
                     isProfane: isProfane
                 };
@@ -256,16 +273,16 @@
         filterTables();
     }
 
-    function togglePosFilter(pos, btn) {
-        if (pos === 'all') {
+    function togglePosFilter(posValue, btn) {
+        if (posValue === 'all') {
             selectedPosFilters.clear(); selectedPosFilters.add('all');
             document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         } else {
             selectedPosFilters.delete('all');
             document.getElementById('btn_pos_all').classList.remove('active');
-            if (selectedPosFilters.has(pos)) { selectedPosFilters.delete(pos); btn.classList.remove('active'); }
-            else { selectedPosFilters.add(pos); btn.classList.add('active'); }
+            if (selectedPosFilters.has(posValue)) { selectedPosFilters.delete(posValue); btn.classList.remove('active'); }
+            else { selectedPosFilters.add(posValue); btn.classList.add('active'); }
             if (selectedPosFilters.size === 0) { selectedPosFilters.add('all'); document.getElementById('btn_pos_all').classList.add('active'); }
         }
         filterTables();
@@ -294,7 +311,8 @@
                 tr.dataset.parentId = key;
                 tr.dataset.spaceHe = item.hasSpaceHe;
                 tr.dataset.spaceEn = item.hasSpaceEn;
-                tr.dataset.pos = item.pos;
+                tr.dataset.posHe = item.posHe;
+                tr.dataset.posEn = item.posEn;
                 tr.dataset.isProfane = item.isProfane;
                 tr.innerHTML = `<td>${item.he}<span class="info-tag"></span></td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
@@ -323,7 +341,9 @@
                 if (selectedTypeFilters.has('sent_both') && (sHe && sEn)) mType = true;
             }
 
-            const itemPosList = r.dataset.pos.split(',').map(s => s.trim());
+            // סינון לפי חלק דיבור בשפה הנבחרת
+            const itemPosData = (posFilterLang === 'he') ? r.dataset.posHe : r.dataset.posEn;
+            const itemPosList = itemPosData.split(',').map(s => s.trim());
             let mPos = selectedPosFilters.has('all');
             if (!mPos) {
                 mPos = itemPosList.some(p => selectedPosFilters.has(p));
