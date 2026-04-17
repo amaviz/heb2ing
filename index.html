@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניהול רשימות - heb2ing</title>
+    <title>heb2ing - ניהול רשימות</title>
     <style>
         :root {
             --bg-color: #f0f2f5;
@@ -14,7 +14,7 @@
             --primary-blue: #1a73e8;
             --kids-pink: #ff6b6b;
             --accent-green: #34a853;
-            --accent-orange: #fbbc05;
+            --accent-purple: #9c27b0;
         }
 
         .dark-mode {
@@ -26,272 +26,302 @@
             --primary-blue: #8ab4f8;
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
-        .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
+        .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
         
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .top-btn { padding: 8px 15px; cursor: pointer; border-radius: 20px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); font-weight: bold; transition: 0.3s; }
+        .top-bar { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
+        .top-btn { padding: 8px 16px; cursor: pointer; border-radius: 20px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); font-weight: bold; transition: 0.2s; }
         .top-btn:hover { background: var(--primary-blue); color: white; }
-        
-        .kids-mode-btn { border-color: var(--kids-pink); color: var(--kids-pink); }
-        .kids-mode-btn.active { background: var(--kids-pink); color: white; }
+        .kids-mode-btn.active { background: var(--kids-pink); border-color: var(--kids-pink); color: white; }
 
-        .controls { background: var(--container-bg); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .search-box { width: 100%; max-width: 400px; padding: 12px 20px; border-radius: 25px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background: var(--container-bg); color: var(--text-color); }
+        .controls { display: flex; flex-direction: column; gap: 15px; background: var(--bg-color); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .search-box { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 25px; border: 1px solid var(--border-color); font-size: 16px; outline: none; }
         
-        .filter-group { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; border-top: 1px solid var(--border-color); padding-top: 10px; }
-        .filter-label { font-size: 0.9em; font-weight: bold; color: var(--primary-blue); margin-bottom: 5px; }
-        .filter-options { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+        .filter-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .filter-label { font-weight: bold; font-size: 0.9em; color: var(--primary-blue); }
+        .filter-options { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
         
-        .filter-btn { padding: 6px 14px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); border-radius: 15px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; }
-        .filter-btn.active { background: var(--primary-blue); color: white; }
-        
-        /* עיצוב שונה לחלקי הדיבור */
-        .pos-he-btn.active { background: var(--accent-green); border-color: var(--accent-green); color: white; }
-        .pos-en-btn.active { background: #9c27b0; border-color: #9c27b0; color: white; }
+        .f-btn { padding: 6px 12px; border: 1px solid var(--border-color); background: var(--container-bg); border-radius: 15px; cursor: pointer; font-size: 13px; color: var(--text-color); transition: 0.2s; }
+        .f-btn.active { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
+        .pos-he.active { background: var(--accent-green); border-color: var(--accent-green); color: white; }
+        .pos-en.active { background: var(--accent-purple); border-color: var(--accent-purple); color: white; }
 
-        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-button { padding: 10px 20px; cursor: pointer; border: none; background: var(--tab-bg); color: var(--text-color); border-radius: 25px; font-weight: bold; }
-        .tab-button.active { background: var(--primary-blue); color: white; }
+        .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 18px; cursor: pointer; border: none; background: var(--tab-bg); border-radius: 20px; font-weight: bold; color: var(--text-color); }
+        .tab-btn.active { background: var(--primary-blue); color: white; }
         
-        .sub-tab-button { padding: 5px 15px; cursor: pointer; border: none; background: var(--tab-bg); border-radius: 15px; margin: 0 3px; }
-        .sub-tab-button.active { background: var(--accent-orange); color: black; font-weight: bold; }
+        .sub-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; }
+        .sub-btn { padding: 5px 12px; cursor: pointer; border: 1px solid var(--border-color); background: transparent; border-radius: 10px; font-size: 13px; color: var(--text-color); }
+        .sub-btn.active { background: #fbbc05; border-color: #fbbc05; color: black; font-weight: bold; }
 
-        .tab-content, .sub-tab-content { display: none; }
-        .tab-content.active, .sub-tab-content.active { display: block; }
+        .tab-content, .sub-content { display: none; }
+        .tab-content.active, .sub-content.active { display: block; }
         
-        table { width: 100%; border-collapse: collapse; }
-        td { border: 1px solid var(--border-color); padding: 12px; text-align: center; }
-        .letter-divider { background-color: rgba(26, 115, 232, 0.1); font-weight: bold; color: var(--primary-blue); }
-        .info-tag { font-size: 0.7em; color: #888; display: block; margin-top: 4px; }
-        .no-results { text-align: center; color: #d93025; padding: 20px; display: none; }
+        table { width: 100%; border-collapse: collapse; background: var(--container-bg); }
+        td { border: 1px solid var(--border-color); padding: 12px; text-align: center; width: 50%; }
+        .tag { font-size: 0.7em; color: #888; display: block; margin-top: 4px; }
+        .no-results { text-align: center; padding: 30px; color: #888; display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="top-bar">
-        <button class="top-btn" id="langBtn" onclick="toggleLanguage()">English</button>
-        <button class="top-btn kids-mode-btn" id="kidsBtn" onclick="toggleKidsMode()">👶 מצב ילדים: כבוי</button>
-        <button class="top-btn" onclick="toggleDarkMode()">🌙</button>
+        <div>
+            <button class="top-btn" id="langBtn" onclick="toggleLang()">English</button>
+            <button class="top-btn" onclick="toggleDark()">🌙</button>
+        </div>
+        <button class="top-btn kids-mode-btn" id="kidsBtn" onclick="toggleKids()">👶 מצב ילדים: כבוי</button>
     </div>
 
-    <h1 id="mainTitle" style="text-align:center; color:var(--primary-blue)">ניהול רשימות heb2ing</h1>
+    <h1 id="mainTitle" style="text-align:center; margin:0 0 20px 0;">ניהול רשימות heb2ing</h1>
 
     <div class="controls">
-        <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה..." onkeyup="filterTables()">
+        <input type="text" id="searchInput" class="search-box" placeholder="חפש מילה..." onkeyup="filter()">
         
         <div class="filter-group">
-            <div class="filter-label" id="lbl_type">סוג תוכן:</div>
+            <div class="filter-label" id="l_type">סוג תוכן:</div>
             <div class="filter-options">
-                <button class="filter-btn active" id="btn_type_all" onclick="toggleTypeFilter('all', this)">הכל</button>
-                <button class="filter-btn" onclick="toggleTypeFilter('word', this)">מילים</button>
-                <button class="filter-btn" onclick="toggleTypeFilter('sent', this)">משפטים</button>
+                <button class="f-btn active" id="type_all" onclick="setType('all')">הכל</button>
+                <button class="f-btn" id="type_word" onclick="setType('word')">מילים</button>
+                <button class="f-btn" id="type_sent" onclick="setType('sent')">משפטים</button>
             </div>
         </div>
 
         <div class="filter-group">
-            <div class="filter-label" id="lbl_pos_he">חלק דיבור (עברית):</div>
-            <div class="filter-options">
-                <button class="filter-btn pos-he-btn active" id="btn_pos_he_all" onclick="togglePosHeFilter('all', this)">הכל</button>
-                <button class="filter-btn pos-he-btn" onclick="togglePosHeFilter('שם עצם', this)">שם עצם</button>
-                <button class="filter-btn pos-he-btn" onclick="togglePosHeFilter('שם תואר', this)">שם תואר</button>
-                <button class="filter-btn pos-he-btn" onclick="togglePosHeFilter('פועל', this)">פועל</button>
+            <div class="filter-label" id="l_pos_he">חלק דיבור (עברית):</div>
+            <div class="filter-options" id="posHeContainer">
+                <button class="f-btn pos-he active" onclick="togglePosHe('all', this)">הכל</button>
+                <button class="f-btn pos-he" onclick="togglePosHe('שם עצם', this)">שם עצם</button>
+                <button class="f-btn pos-he" onclick="togglePosHe('שם תואר', this)">שם תואר</button>
+                <button class="f-btn pos-he" onclick="togglePosHe('פועל', this)">פועל</button>
             </div>
         </div>
 
         <div class="filter-group">
-            <div class="filter-label" id="lbl_pos_en">חלק דיבור (אנגלית):</div>
-            <div class="filter-options">
-                <button class="filter-btn pos-en-btn active" id="btn_pos_en_all" onclick="togglePosEnFilter('all', this)">הכל</button>
-                <button class="filter-btn pos-en-btn" onclick="togglePosEnFilter('שם עצם', this)">שם עצם</button>
-                <button class="filter-btn pos-en-btn" onclick="togglePosEnFilter('שם תואר', this)">שם תואר</button>
-                <button class="filter-btn pos-en-btn" onclick="togglePosEnFilter('פועל', this)">פועל</button>
+            <div class="filter-label" id="l_pos_en">חלק דיבור (אנגלית):</div>
+            <div class="filter-options" id="posEnContainer">
+                <button class="f-btn pos-en active" onclick="togglePosEn('all', this)">הכל</button>
+                <button class="f-btn pos-en" onclick="togglePosEn('שם עצם', this)">שם עצם</button>
+                <button class="f-btn pos-en" onclick="togglePosEn('שם תואר', this)">שם תואר</button>
+                <button class="f-btn pos-en" onclick="togglePosEn('פועל', this)">פועל</button>
             </div>
         </div>
     </div>
 
-    <div class="tabs">
-        <button class="tab-button active" onclick="openTab(event, 'listA')" id="tabA">רשימה א'</button>
-        <button class="tab-button" onclick="openTab(event, 'listB')" id="tabB">רשימה ב'</button>
-        <button class="tab-button" onclick="openTab(event, 'listC')" id="tabC">רשימה ג'</button>
-        <button class="tab-button" onclick="openTab(event, 'listALL')" id="tabAll">הכל</button>
+    <div class="tabs" id="mainTabs">
+        <button class="tab-btn active" onclick="showTab('A', this)" id="tA">רשימה א'</button>
+        <button class="tab-btn" onclick="showTab('B', this)" id="tB">רשימה ב'</button>
+        <button class="tab-btn" onclick="showTab('C', this)" id="tC">רשימה ג'</button>
+        <button class="tab-btn" onclick="showTab('ALL', this)" id="tAll">הכל</button>
     </div>
 
-    <div id="listA" class="tab-content active"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
-    <div id="listB" class="tab-content"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
-    <div id="listC" class="tab-content"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
-    <div id="listALL" class="tab-content"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
-
-    <div id="loading" style="text-align:center; padding:20px;">טוען נתונים...</div>
-    <div id="noResults" class="no-results">לא נמצאו מילים תואמות</div>
+    <div id="contentArea"></div>
+    <div id="noResults" class="no-results">לא נמצאו תוצאות</div>
 </div>
 
 <script>
     const SHEET_ID = '1D8mPNKBN12uzYOu7HYaxU7trInECv7k5jBl0GnugG3o';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-    const badWords = ['shit', 'fuck', 'bitch', 'ass', 'damn', 'nigger', 'nigga']; 
+    
+    let rawData = [];
+    let state = {
+        lang: 'he',
+        kids: false,
+        type: 'all',
+        posHe: new Set(['all']),
+        posEn: new Set(['all']),
+        tab: 'A',
+        sub: 'ALL'
+    };
 
-    let allData = [];
-    let currentLang = 'he';
-    let kidsMode = false;
-    let selectedTypeFilter = 'all';
-    let selectedPosHeFilter = 'all';
-    let selectedPosEnFilter = 'all';
+    const UI = {
+        he: { title: "ניהול רשימות heb2ing", search: "חפש מילה...", type: "סוג תוכן:", posHe: "חלק דיבור (עברית):", posEn: "חלק דיבור (אנגלית):", tA: "רשימה א'", tB: "רשימה ב'", tC: "רשימה ג'", tAll: "הכל", kidsOff: "👶 מצב ילדים: כבוי", kidsOn: "👶 מצב ילדים: פעיל", all: "הכל", word: "מילים", sent: "משפטים", noun: "שם עצם", adj: "שם תואר", verb: "פועל" },
+        en: { title: "heb2ing Lists", search: "Search word...", type: "Content Type:", posHe: "POS (Hebrew):", posEn: "POS (English):", tA: "List A", tB: "List B", tC: "List C", tAll: "All", kidsOff: "👶 Kids Mode: OFF", kidsOn: "👶 Kids Mode: ON", all: "All", word: "Words", sent: "Sentences", noun: "Noun", adj: "Adjective", verb: "Verb" }
+    };
 
-    async function fetchData() {
+    async function load() {
         try {
-            const response = await fetch(CSV_URL);
-            const text = await response.text();
+            const res = await fetch(CSV_URL);
+            const text = await res.text();
             const rows = text.split('\n').slice(1);
-            allData = rows.map(row => {
-                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                let rawList = cols[2] || 'א';
-                let type = rawList.includes('א') ? 'A' : (rawList.includes('ב') ? 'B' : 'C');
-                
-                // טיפול בפורמט החדש: עמודה E מכילה "חלק דיבור עברית, חלק דיבור אנגלית"
-                const posCol = (cols[4] || "").split(',');
-                const posHe = (posCol[0] || "").trim();
-                const posEn = (posCol[1] || "").trim();
-
-                const content = (cols[0] + " " + cols[1]).toLowerCase();
-                const isProfane = badWords.some(w => new RegExp(`\\b${w}\\b`, 'i').test(content));
-
-                return { 
-                    he: cols[0] || '', en: cols[1] || '', type: type, stars: cols[3] || '3',
-                    posHe: posHe, posEn: posEn,
-                    isSent: cols[0].includes(' ') || cols[1].includes(' '),
-                    isProfane: isProfane
+            rawData = rows.map(r => {
+                const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
+                const pos = (c[4] || "").split(',');
+                return {
+                    he: c[0] || '', en: c[1] || '',
+                    list: (c[2] || 'א').includes('א') ? 'A' : (c[2] || 'ב').includes('ב') ? 'B' : 'C',
+                    stars: c[3] || '3',
+                    posHe: (pos[0] || "").trim(),
+                    posEn: (pos[1] || "").trim(),
+                    isSent: (c[0] + (c[1] || "")).includes(' '),
+                    profane: ['shit','fuck','bitch','ass'].some(w => (c[0]+c[1]).toLowerCase().includes(w))
                 };
-            }).filter(i => i.he !== '');
-            
-            document.getElementById('loading').style.display = 'none';
-            setupTabs();
-            renderAll();
-        } catch (e) { console.error(e); }
+            }).filter(i => i.he);
+            renderStructure();
+            filter();
+        } catch (e) { alert("שגיאה בטעינת הנתונים"); }
     }
 
-    function setupTabs() {
+    function renderStructure() {
+        const area = document.getElementById('contentArea');
+        area.innerHTML = '';
         ['A', 'B', 'C', 'ALL'].forEach(l => {
-            const container = document.querySelector(`#list${l} .sub-tabs-container`);
-            const content = document.querySelector(`#list${l} .sub-contents`);
-            const allId = l === 'ALL' ? 'GlobalALL' : l + '_ALL';
-            container.innerHTML = `<div style="text-align:center; margin-bottom:10px;">
-                <button class="sub-tab-button active" onclick="openSubTab(event, '${allId}')">כל הכוכבים</button>
-                <button class="sub-tab-button" onclick="openSubTab(event, '${l}1')">★ 1</button>
-                <button class="sub-tab-button" onclick="openSubTab(event, '${l}2')">★★ 2</button>
-                <button class="sub-tab-button" onclick="openSubTab(event, '${l}3')">★★★ 3</button>
+            const div = document.createElement('div');
+            div.id = `tab${l}`;
+            div.className = `tab-content ${state.tab === l ? 'active' : ''}`;
+            
+            const subTabs = `<div class="sub-tabs">
+                <button class="sub-btn active" onclick="showSub('${l}', 'ALL', this)">כל הכוכבים</button>
+                <button class="sub-btn" onclick="showSub('${l}', '1', this)">★ 1</button>
+                <button class="sub-btn" onclick="showSub('${l}', '2', this)">★★ 2</button>
+                <button class="sub-btn" onclick="showSub('${l}', '3', this)">★★★ 3</button>
             </div>`;
-            content.innerHTML = `
-                <div id="${allId}" class="sub-tab-content active"><table id="table_${allId}"><tbody></tbody></table></div>
-                <div id="${l}1" class="sub-tab-content"><table id="table_${l}1"><tbody></tbody></table></div>
-                <div id="${l}2" class="sub-tab-content"><table id="table_${l}2"><tbody></tbody></table></div>
-                <div id="${l}3" class="sub-tab-content"><table id="table_${l}3"><tbody></tbody></table></div>`;
+            
+            const contents = `<div id="sub${l}ALL" class="sub-content active"><table><tbody></tbody></table></div>
+                              <div id="sub${l}1" class="sub-content"><table><tbody></tbody></table></div>
+                              <div id="sub${l}2" class="sub-content"><table><tbody></tbody></table></div>
+                              <div id="sub${l}3" class="sub-content"><table><tbody></tbody></table></div>`;
+            
+            div.innerHTML = subTabs + contents;
+            area.appendChild(div);
         });
+        fillTables();
     }
 
-    function renderAll() {
-        document.querySelectorAll('tbody').forEach(b => b.innerHTML = '');
-        let sorted = [...allData].sort((a,b) => a.he.localeCompare(b.he, 'he'));
-        
-        sorted.forEach(item => {
-            const targets = [item.type + '_ALL', item.type + item.stars, 'ALL_ALL', 'ALL' + item.stars, 'GlobalALL'];
-            targets.forEach(tId => {
-                const tbody = document.querySelector(`#table_${tId} tbody`);
-                if(!tbody) return;
+    function fillTables() {
+        rawData.sort((a,b) => a.he.localeCompare(b.he, 'he')).forEach(item => {
+            const targets = [`${item.list}ALL`, `${item.list}${item.stars}`, `ALLALL`, `ALL${item.stars}`];
+            targets.forEach(t => {
+                const tbody = document.querySelector(`#sub${t} tbody`);
+                if (!tbody) return;
                 const tr = document.createElement('tr');
-                tr.className = 'data-row';
-                tr.dataset.isSent = item.isSent;
+                tr.className = 'item-row';
+                tr.dataset.type = item.isSent ? 'sent' : 'word';
                 tr.dataset.posHe = item.posHe;
                 tr.dataset.posEn = item.posEn;
-                tr.dataset.isProfane = item.isProfane;
-                tr.innerHTML = `
-                    <td>${item.he}<span class="info-tag">${item.posHe}</span></td>
-                    <td>${item.en}<span class="info-tag">${item.posEn}</span></td>
-                `;
+                tr.dataset.profane = item.profane;
+                tr.innerHTML = `<td>${item.he}<span class="tag">${item.posHe}</span></td><td>${item.en}<span class="tag">${item.posEn}</span></td>`;
                 tbody.appendChild(tr);
             });
         });
-        filterTables();
     }
 
-    function filterTables() {
+    function filter() {
         const q = document.getElementById('searchInput').value.toLowerCase();
-        let count = 0;
-        const activeSub = document.querySelector('.tab-content.active .sub-tab-content.active');
+        let visibleCount = 0;
+        
+        document.querySelectorAll('.item-row').forEach(row => {
+            const isVisibleSub = row.closest('.sub-content').classList.contains('active');
+            if (!isVisibleSub) return;
 
-        document.querySelectorAll('.data-row').forEach(row => {
-            const isVisibleSub = row.closest('.sub-tab-content') === activeSub;
-            if(!isVisibleSub) { row.style.display = 'none'; return; }
-
-            if(kidsMode && row.dataset.isProfane === 'true') { row.style.display = 'none'; return; }
-
-            const matchType = (selectedTypeFilter === 'all') || 
-                             (selectedTypeFilter === 'sent' && row.dataset.isSent === 'true') ||
-                             (selectedTypeFilter === 'word' && row.dataset.isSent === 'false');
-            
-            const matchPosHe = (selectedPosHeFilter === 'all') || (row.dataset.posHe === selectedPosHeFilter);
-            const matchPosEn = (selectedPosEnFilter === 'all') || (row.dataset.posEn === selectedPosEnFilter);
             const matchSearch = row.innerText.toLowerCase().includes(q);
+            const matchType = state.type === 'all' || row.dataset.type === state.type;
+            const matchKids = !state.kids || row.dataset.profane === 'false';
+            
+            const matchPosHe = state.posHe.has('all') || [...state.posHe].some(p => row.dataset.posHe.includes(p));
+            const matchPosEn = state.posEn.has('all') || [...state.posEn].some(p => row.dataset.posEn.includes(p));
 
-            if(matchType && matchPosHe && matchPosEn && matchSearch) {
+            if (matchSearch && matchType && matchKids && matchPosHe && matchPosEn) {
                 row.style.display = '';
-                count++;
+                visibleCount++;
             } else {
                 row.style.display = 'none';
             }
         });
-        document.getElementById('noResults').style.display = count === 0 ? 'block' : 'none';
+        document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
     }
 
-    // פונקציות שינוי סינונים
-    function toggleTypeFilter(val, btn) {
-        selectedTypeFilter = val;
-        document.querySelectorAll('.filter-group:nth-child(2) .filter-btn').forEach(b => b.classList.remove('active'));
+    // ניהול מצבים
+    function toggleLang() {
+        state.lang = state.lang === 'he' ? 'en' : 'he';
+        const s = UI[state.lang];
+        document.getElementById('mainHtml').dir = state.lang === 'he' ? 'rtl' : 'ltr';
+        document.getElementById('langBtn').innerText = state.lang === 'he' ? 'English' : 'עברית';
+        document.getElementById('mainTitle').innerText = s.title;
+        document.getElementById('searchInput').placeholder = s.search;
+        document.getElementById('l_type').innerText = s.type;
+        document.getElementById('l_pos_he').innerText = s.posHe;
+        document.getElementById('l_pos_en').innerText = s.posEn;
+        document.getElementById('tA').innerText = s.tA;
+        document.getElementById('tB').innerText = s.tB;
+        document.getElementById('tC').innerText = s.tC;
+        document.getElementById('tAll').innerText = s.tAll;
+        document.getElementById('type_all').innerText = s.all;
+        document.getElementById('type_word').innerText = s.word;
+        document.getElementById('type_sent').innerText = s.sent;
+        // עדכון כפתורי חלקי דיבור
+        document.querySelectorAll('.pos-he').forEach((b, i) => b.innerText = [s.all, s.noun, s.adj, s.verb][i]);
+        document.querySelectorAll('.pos-en').forEach((b, i) => b.innerText = [s.all, s.noun, s.adj, s.verb][i]);
+        filter();
+    }
+
+    function toggleKids() {
+        state.kids = !state.kids;
+        document.getElementById('kidsBtn').innerText = state.kids ? UI[state.lang].kidsOn : UI[state.lang].kidsOff;
+        document.getElementById('kidsBtn').classList.toggle('active');
+        filter();
+    }
+
+    function setType(t) {
+        state.type = t;
+        document.querySelectorAll('.filter-group:first-of-type .f-btn').forEach(b => b.classList.toggle('active', b.id === `type_${t}`));
+        filter();
+    }
+
+    function togglePosHe(val, btn) {
+        if (val === 'all') {
+            state.posHe = new Set(['all']);
+        } else {
+            state.posHe.delete('all');
+            if (state.posHe.has(val)) state.posHe.delete(val);
+            else state.posHe.add(val);
+            if (state.posHe.size === 0) state.posHe.add('all');
+        }
+        document.querySelectorAll('.pos-he').forEach(b => {
+            const bVal = b.getAttribute('onclick').match(/'([^']+)'/)[1];
+            b.classList.toggle('active', state.posHe.has(bVal));
+        });
+        filter();
+    }
+
+    function togglePosEn(val, btn) {
+        if (val === 'all') {
+            state.posEn = new Set(['all']);
+        } else {
+            state.posEn.delete('all');
+            if (state.posEn.has(val)) state.posEn.delete(val);
+            else state.posEn.add(val);
+            if (state.posEn.size === 0) state.posEn.add('all');
+        }
+        document.querySelectorAll('.pos-en').forEach(b => {
+            const bVal = b.getAttribute('onclick').match(/'([^']+)'/)[1];
+            b.classList.toggle('active', state.posEn.has(bVal));
+        });
+        filter();
+    }
+
+    function showTab(l, btn) {
+        state.tab = l;
+        document.querySelectorAll('.tab-btn, .tab-content').forEach(x => x.classList.remove('active'));
         btn.classList.add('active');
-        filterTables();
+        document.getElementById(`tab${l}`).classList.add('active');
+        filter();
     }
 
-    function togglePosHeFilter(val, btn) {
-        selectedPosHeFilter = val;
-        document.querySelectorAll('.pos-he-btn').forEach(b => b.classList.remove('active'));
+    function showSub(l, s, btn) {
+        state.sub = s;
+        const parent = document.getElementById(`tab${l}`);
+        parent.querySelectorAll('.sub-btn, .sub-content').forEach(x => x.classList.remove('active'));
         btn.classList.add('active');
-        filterTables();
+        document.getElementById(`sub${l}${s}`).classList.add('active');
+        filter();
     }
 
-    function togglePosEnFilter(val, btn) {
-        selectedPosEnFilter = val;
-        document.querySelectorAll('.pos-en-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filterTables();
-    }
+    function toggleDark() { document.body.classList.toggle('dark-mode'); }
 
-    function toggleKidsMode() {
-        kidsMode = !kidsMode;
-        const btn = document.getElementById('kidsBtn');
-        btn.classList.toggle('active');
-        btn.innerText = kidsMode ? "👶 מצב ילדים: פעיל" : "👶 מצב ילדים: כבוי";
-        filterTables();
-    }
-
-    function openTab(e, id) {
-        document.querySelectorAll('.tab-button, .tab-content').forEach(x => x.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        e.currentTarget.classList.add('active');
-        filterTables();
-    }
-
-    function openSubTab(e, id) {
-        const parent = e.currentTarget.closest('.tab-content');
-        parent.querySelectorAll('.sub-tab-button, .sub-tab-content').forEach(x => x.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        e.currentTarget.classList.add('active');
-        filterTables();
-    }
-
-    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-
-    fetchData();
+    load();
 </script>
+
 </body>
 </html>
