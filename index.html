@@ -120,6 +120,7 @@
     </div>
 
     <div id="loading" class="loading-msg">טוען נתונים...</div>
+    <div id="wordCount" style="font-size: 12px; color: #666; text-align: right; margin-bottom: 5px; font-weight: bold;"></div>
     <div id="noResults" class="no-results">לא נמצאה מילה מתאימה</div>
 
     <div class="form-container">
@@ -322,6 +323,8 @@
             lr.style.display = hasVisible ? "" : "none";
         });
         document.getElementById('noResults').style.display = (count === 0 && (q !== "" || !selectedFilters.has('all') || kidsMode)) ? "block" : "none";
+        // עדכון מונה המילים
+        document.getElementById('wordCount').innerText = currentLang === 'he' ? `נמצאו ${count} מילים` : `Found ${count} words`;
     }
 
     function openTab(e, id) {
