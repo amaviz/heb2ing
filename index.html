@@ -27,7 +27,6 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
         .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
-        /* סרגל עליון מקובע - לא זז בשינוי שפה */
         .top-bar { 
             display: flex !important; 
             justify-content: space-between !important; 
@@ -176,7 +175,6 @@
             list_prefix: "List", kids_on: "👶 Kids Mode: ON", kids_off: "👶 Kids Mode: OFF", 
             count_prefix: "Found", count_suffix: "words", part_he: "Hebrew:", part_en: "English:" 
         },
-        // מילון תרגום לחלקי הדיבור מהטבלה
         partsMap: {
             "שם עצם": "Noun",
             "פועל": "Verb",
@@ -186,6 +184,7 @@
             "מילת יחס": "Preposition",
             "גוף": "Pronoun",
             "מילת קריאה": "Interjection"
+            "מילת שאלה": "Question Word"
         }
     };
 
@@ -274,14 +273,9 @@
         parts.forEach(part => {
             const btn = document.createElement('button');
             btn.className = `part-btn ${set.has(part) ? 'active' : ''}`;
-            
-            // תרגום הטקסט בכפתור אם השפה אנגלית
             let label = part;
-            if (currentLang === 'en' && trans.partsMap[part]) {
-                label = trans.partsMap[part];
-            }
+            if (currentLang === 'en' && trans.partsMap[part]) label = trans.partsMap[part];
             btn.innerText = label;
-            
             btn.onclick = () => {
                 if (set.has(part)) set.delete(part); else set.add(part);
                 btn.classList.toggle('active');
@@ -298,14 +292,12 @@
             if(!container || !content) return;
             const prefix = l === 'ALL' ? 'ALL' : l;
             const allId = l === 'ALL' ? 'GlobalALL' : l + '_ALL';
-            
             container.innerHTML = `<div class="sub-tabs">
                 <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}1')">★ 1</button>
                 <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}2')">★★ 2</button>
                 <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}3')">★★★ 3</button>
                 <button class="sub-tab-button active" onclick="openSubTab(event, '${allId}')">${trans[currentLang].stars_all}</button>
             </div>`;
-            
             content.innerHTML = `
                 <div class="word-count-display"></div>
                 <div id="${prefix}1" class="sub-tab-content"><table id="table${prefix}1"><tbody></tbody></table></div>
@@ -403,7 +395,10 @@
             lr.style.display = hasVisible ? "" : "none";
         });
         
-        document.getElementById('noResults').style.display = (count === 0 && q !== "") ? "block" : "none";
+        // תיקון כאן: הצגת "לא נמצאו תוצאות" אם הספירה היא 0 ובוצע סינון כלשהו
+        const isAnyFilterActive = q !== "" || !selectedFilters.has('all') || selectedPartsHe.size > 0 || selectedPartsEn.size > 0 || kidsMode;
+        document.getElementById('noResults').style.display = (count === 0 && isAnyFilterActive) ? "block" : "none";
+        
         const activeCountDisplay = document.querySelector('.tab-content.active .word-count-display');
         if (activeCountDisplay) activeCountDisplay.innerText = `${trans[currentLang].count_prefix} ${count} ${trans[currentLang].count_suffix}`;
     }
