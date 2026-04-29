@@ -27,12 +27,12 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
         .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
-        /* קיבוע סרגל עליון שלא יזוז בשינוי שפה */
+        /* סרגל עליון מקובע - לא זז בשינוי שפה */
         .top-bar { 
             display: flex !important; 
             justify-content: space-between !important; 
             flex-direction: row !important; 
-            direction: rtl !important; /* תמיד מימין לשמאל בסרגל העליון */
+            direction: rtl !important; 
             margin-bottom: 15px; 
             gap: 10px;
         }
@@ -175,6 +175,17 @@
             loading: "Loading data...", no_results: "No matching words found", stars_all: "All", 
             list_prefix: "List", kids_on: "👶 Kids Mode: ON", kids_off: "👶 Kids Mode: OFF", 
             count_prefix: "Found", count_suffix: "words", part_he: "Hebrew:", part_en: "English:" 
+        },
+        // מילון תרגום לחלקי הדיבור מהטבלה
+        partsMap: {
+            "שם עצם": "Noun",
+            "פועל": "Verb",
+            "תואר": "Adjective",
+            "תואר הפועל": "Adverb",
+            "מילת חיבור": "Conjunction",
+            "מילת יחס": "Preposition",
+            "גוף": "Pronoun",
+            "מילת קריאה": "Interjection"
         }
     };
 
@@ -188,11 +199,8 @@
     function toggleLanguage() {
         currentLang = currentLang === 'he' ? 'en' : 'he';
         const isHe = currentLang === 'he';
-        
-        // כיוון דף כללי (חוץ מהסרגל העליון)
         document.getElementById('mainHtml').dir = isHe ? 'rtl' : 'ltr';
         
-        // טקסטים
         document.getElementById('langBtn').innerText = isHe ? 'English' : 'עברית';
         document.getElementById('mainTitle').innerText = trans[currentLang].title;
         document.getElementById('searchInput').placeholder = trans[currentLang].search;
@@ -206,7 +214,6 @@
         
         document.getElementById('lbl_part_he').innerText = trans[currentLang].part_he;
         document.getElementById('lbl_part_en').innerText = trans[currentLang].part_en;
-        
         document.getElementById('lbl_sort_he').innerText = trans[currentLang].sort_he;
         document.getElementById('lbl_sort_en').innerText = trans[currentLang].sort_en;
         
@@ -215,7 +222,6 @@
         document.getElementById('tabC').innerText = trans[currentLang].tabC;
         document.getElementById('tabAll').innerText = trans[currentLang].tabAll;
         
-        // עדכון טאבים פנימיים (כוכבים) ורשימות
         setupTabs();
         renderAll();
         updatePartButtons();
@@ -268,7 +274,14 @@
         parts.forEach(part => {
             const btn = document.createElement('button');
             btn.className = `part-btn ${set.has(part) ? 'active' : ''}`;
-            btn.innerText = part;
+            
+            // תרגום הטקסט בכפתור אם השפה אנגלית
+            let label = part;
+            if (currentLang === 'en' && trans.partsMap[part]) {
+                label = trans.partsMap[part];
+            }
+            btn.innerText = label;
+            
             btn.onclick = () => {
                 if (set.has(part)) set.delete(part); else set.add(part);
                 btn.classList.toggle('active');
@@ -341,12 +354,11 @@
                 tr.setAttribute('data-parent-id', key);
                 tr.setAttribute('data-space-he', item.hasSpaceHe);
                 tr.setAttribute('data-space-en', item.hasSpaceEn);
-                tr.setAttribute('data-stars', item.stars);
-                tr.setAttribute('data-is-profane', item.isProfane);
-                tr.setAttribute('data-belongs-to-letter', firstChar);
                 tr.setAttribute('data-part-he', item.partHe.join(','));
                 tr.setAttribute('data-part-en', item.partEn.join(','));
-                tr.innerHTML = `<td><span class="word-text">${item.he}</span><span class="info-tag"></span></td><td>${item.en}</td>`;
+                tr.setAttribute('data-is-profane', item.isProfane);
+                tr.setAttribute('data-belongs-to-letter', firstChar);
+                tr.innerHTML = `<td><span class="word-text">${item.he}</span></td><td>${item.en}</td>`;
                 tbody.appendChild(tr);
             });
         });
