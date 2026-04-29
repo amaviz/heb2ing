@@ -31,12 +31,11 @@
             display: flex !important; 
             justify-content: space-between !important; 
             flex-direction: row !important; 
-            direction: ltr !important; 
             margin-bottom: 15px; 
             gap: 10px;
         }
         
-        .top-btn { padding: 8px 15px; cursor: pointer; border-radius: 20px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); font-weight: bold; transition: 0.3s; }
+        .top-btn { padding: 8px 15px; cursor: pointer; border-radius: 20px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); font-weight: bold; transition: 0.3s; min-width: 80px; }
         .top-btn:hover { background: var(--primary-blue); color: white; }
         
         .kids-mode-btn { border-color: var(--kids-pink); color: var(--kids-pink); }
@@ -51,10 +50,9 @@
         .filter-btn { padding: 6px 14px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); border-radius: 15px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; }
         .filter-btn.active { background: var(--primary-blue); color: white; }
 
-        /* עיצוב חלקי דיבור */
         .part-filter-area { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 10px; }
         .part-group { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; align-items: center; }
-        .part-label { font-size: 0.85em; font-weight: bold; min-width: 60px; }
+        .part-label { font-size: 0.85em; font-weight: bold; min-width: 65px; }
         .part-btn { padding: 4px 10px; border: 1px solid #ccc; background: var(--container-bg); color: var(--text-color); border-radius: 12px; cursor: pointer; font-size: 12px; transition: 0.2s; }
         .part-btn.active { background: #34a853 !important; color: white !important; border-color: #34a853 !important; }
 
@@ -106,7 +104,7 @@
             <button class="filter-btn" id="btn_sent_both" onclick="toggleWordFilter('sent_both', this)">משפט בשניהם</button>
         </div>
 
-        <div class="part-filter-area">
+        <div class="part-filter-area" id="partFilterArea">
             <div class="part-group">
                 <span class="part-label" id="lbl_part_he">עברית:</span>
                 <div id="parts-he-btns" class="part-group"></div>
@@ -133,7 +131,7 @@
 
         <div id="listA" class="tab-content active"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
         <div id="listB" class="tab-content"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
-        <div id="listC" class="tab-content"><div class="sub-contents"></div></div>
+        <div id="listC" class="tab-content"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
         <div id="listALL" class="tab-content"><div class="sub-tabs-container"></div><div class="sub-contents"></div></div>
     </div>
 
@@ -149,7 +147,6 @@
     const SHEET_ID = '1D8mPNKBN12uzYOu7HYaxU7trInECv7k5jBl0GnugG3o';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
     
-    // רשימת צנזורה שלך (שמרתי את כל מה שהוספת)
     const badWords = ['shit', 'fuck', 'bitch', 'ass', 'damn', 'nigger', 'nigga','tit','gore','cum','bull bull','dumb','the bill','boner','gay']; 
     
     let allData = [];
@@ -161,34 +158,58 @@
     let kidsMode = false;
 
     const trans = {
-        he: { title: "ניהול רשימות heb2ing", search: "חפש מילה ברשימה זו...", all: "הכל", word_only: "מילים בודדות", sent_he: "משפט בעברית", sent_en: "משפט באנגלית", sent_both: "משפט בשניהם", sort_he: 'א"ב עברי', sort_en: "A-Z (אנגלי)", tabA: "רשימה א'", tabB: "רשימה ב'", tabC: "רשימה ג'", tabAll: "כל המילים", loading: "טוען נתונים...", no_results: "לא נמצאה מילה מתאימה", stars_all: "הכל", list_prefix: "רשימה", kids_on: "👶 מצב ילדים: פעיל", kids_off: "👶 מצב ילדים: כבוי", count_prefix: "נמצאו", count_suffix: "מילים", part_he: "עברית:", part_en: "אנגלית:" },
-        en: { title: "List Management heb2ing", search: "Search word in this list...", all: "All", word_only: "Single Words", sent_he: "Sentence (Heb)", sent_en: "Sentence (Eng)", sent_both: "Sentence (Both)", sort_he: "Hebrew A-B", sort_en: "English A-Z", tabA: "List A", tabB: "List B", tabC: "List C", tabAll: "All Words", loading: "Loading data...", no_results: "No matching words found", stars_all: "All", list_prefix: "List", kids_on: "👶 Kids Mode: ON", kids_off: "👶 Kids Mode: OFF", count_prefix: "Found", count_suffix: "words", part_he: "Hebrew:", part_en: "English:" }
+        he: { 
+            title: "ניהול רשימות heb2ing", search: "חפש מילה ברשימה זו...", all: "הכל", word_only: "מילים בודדות", 
+            sent_he: "משפט בעברית", sent_en: "משפט באנגלית", sent_both: "משפט בשניהם", sort_he: 'א"ב עברי', 
+            sort_en: "A-Z (אנגלי)", tabA: "רשימה א'", tabB: "רשימה ב'", tabC: "רשימה ג'", tabAll: "כל המילים", 
+            loading: "טוען נתונים...", no_results: "לא נמצאה מילה מתאימה", stars_all: "הכל", 
+            list_prefix: "רשימה", kids_on: "👶 מצב ילדים: פעיל", kids_off: "👶 מצב ילדים: כבוי", 
+            count_prefix: "נמצאו", count_suffix: "מילים", part_he: "עברית:", part_en: "אנגלית:" 
+        },
+        en: { 
+            title: "List Management heb2ing", search: "Search word in this list...", all: "All", word_only: "Single Words", 
+            sent_he: "Sentence (Heb)", sent_en: "Sentence (Eng)", sent_both: "Sentence (Both)", sort_he: "Hebrew A-B", 
+            sort_en: "English A-Z", tabA: "List A", tabB: "List B", tabC: "List C", tabAll: "All Words", 
+            loading: "Loading data...", no_results: "No matching words found", stars_all: "All", 
+            list_prefix: "List", kids_on: "👶 Kids Mode: ON", kids_off: "👶 Kids Mode: OFF", 
+            count_prefix: "Found", count_suffix: "words", part_he: "Hebrew:", part_en: "English:" 
+        }
     };
 
     function toggleKidsMode() {
         kidsMode = !kidsMode;
-        const btn = document.getElementById('kidsBtn');
-        btn.classList.toggle('active');
-        btn.innerText = kidsMode ? trans[currentLang].kids_on : trans[currentLang].kids_off;
+        document.getElementById('kidsBtn').innerText = kidsMode ? trans[currentLang].kids_on : trans[currentLang].kids_off;
+        document.getElementById('kidsBtn').classList.toggle('active');
         filterTables();
     }
 
     function toggleLanguage() {
         currentLang = currentLang === 'he' ? 'en' : 'he';
-        document.getElementById('mainHtml').dir = currentLang === 'he' ? 'rtl' : 'ltr';
-        document.getElementById('langBtn').innerText = currentLang === 'he' ? 'English' : 'עברית';
+        const isHe = currentLang === 'he';
+        
+        // כיוון דף
+        document.getElementById('mainHtml').dir = isHe ? 'rtl' : 'ltr';
+        document.body.style.direction = isHe ? 'rtl' : 'ltr';
+        document.getElementById('partFilterArea').style.direction = isHe ? 'rtl' : 'ltr';
+        
+        // טקסטים כלליים
+        document.getElementById('langBtn').innerText = isHe ? 'English' : 'עברית';
         document.getElementById('mainTitle').innerText = trans[currentLang].title;
         document.getElementById('searchInput').placeholder = trans[currentLang].search;
         document.getElementById('kidsBtn').innerText = kidsMode ? trans[currentLang].kids_on : trans[currentLang].kids_off;
-        document.getElementById('lbl_part_he').innerText = trans[currentLang].part_he;
-        document.getElementById('lbl_part_en').innerText = trans[currentLang].part_en;
         
+        // כפתורי פילטר סוג
         document.getElementById('btn_all').innerText = trans[currentLang].all;
         document.getElementById('btn_word').innerText = trans[currentLang].word_only;
         document.getElementById('btn_sent_he').innerText = trans[currentLang].sent_he;
         document.getElementById('btn_sent_en').innerText = trans[currentLang].sent_en;
         document.getElementById('btn_sent_both').innerText = trans[currentLang].sent_both;
         
+        // חלקי דיבור - כותרות
+        document.getElementById('lbl_part_he').innerText = trans[currentLang].part_he;
+        document.getElementById('lbl_part_en').innerText = trans[currentLang].part_en;
+        
+        // מיון וטאבים
         document.getElementById('lbl_sort_he').innerText = trans[currentLang].sort_he;
         document.getElementById('lbl_sort_en').innerText = trans[currentLang].sort_en;
         document.getElementById('tabA').innerText = trans[currentLang].tabA;
@@ -198,7 +219,7 @@
         
         setupTabs();
         renderAll();
-        updatePartButtons();
+        updatePartButtons(); // מרענן את הכפתורים שנוצרו דינמית מהשיטס
     }
 
     function toggleDarkMode() {
@@ -224,7 +245,6 @@
                     return regex.test(content);
                 });
 
-                // משיכת חלקי דיבור מטור 5 ו-6
                 const partHe = cols[4] ? cols[4].split(',').map(s => s.trim()) : [];
                 const partEn = cols[5] ? cols[5].split(',').map(s => s.trim()) : [];
 
@@ -364,7 +384,6 @@
                 if (selectedFilters.has('sent_both') && (spaceHe && spaceEn)) matchesType = true;
             }
 
-            // סינון חלקי דיבור
             const rowPartsHe = r.getAttribute('data-part-he').split(',').filter(Boolean);
             const rowPartsEn = r.getAttribute('data-part-en').split(',').filter(Boolean);
             const matchPartHe = selectedPartsHe.size === 0 || rowPartsHe.some(p => selectedPartsHe.has(p));
@@ -391,7 +410,6 @@
         
         document.getElementById('noResults').style.display = (count === 0 && (q !== "" || !selectedFilters.has('all') || kidsMode || selectedPartsHe.size > 0 || selectedPartsEn.size > 0)) ? "block" : "none";
         
-        // עדכון מונה המילים במיקום החדש (מעל המילים)
         const activeCountDisplay = document.querySelector('.tab-content.active .word-count-display');
         if (activeCountDisplay) {
             activeCountDisplay.innerText = `${trans[currentLang].count_prefix} ${count} ${trans[currentLang].count_suffix}`;
