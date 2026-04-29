@@ -27,6 +27,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
         .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
+        /* סרגל עליון מקובע - תמיד באותו סדר */
         .top-bar { 
             display: flex !important; 
             justify-content: space-between !important; 
@@ -70,7 +71,6 @@
         td { border: 1px solid var(--border-color); padding: 12px; text-align: center; }
         .letter-divider { background-color: rgba(26, 115, 232, 0.1); font-weight: bold; font-size: 1.2em; color: var(--primary-blue); padding: 8px 20px !important; }
         
-        .info-tag { font-size: 0.75em; color: #777; display: block; margin-top: 3px; font-weight: normal; min-height: 1em; }
         .loading-msg, .no-results { text-align: center; font-weight: bold; padding: 20px; color: #666; }
         .no-results { color: #d93025; font-size: 1.2em; display: none; }
         
@@ -176,15 +176,8 @@
             count_prefix: "Found", count_suffix: "words", part_he: "Hebrew:", part_en: "English:" 
         },
         partsMap: {
-            "שם עצם": "Noun",
-            "פועל": "Verb",
-            "תואר": "Adjective",
-            "תואר הפועל": "Adverb",
-            "מילת חיבור": "Conjunction",
-            "מילת יחס": "Preposition",
-            "גוף": "Pronoun",
-            "מילת קריאה": "Interjection"
-            "מילת שאלה": "Question Word"
+            "שם עצם": "Noun", "פועל": "Verb", "תואר": "Adjective", "תואר הפועל": "Adverb",
+            "מילת חיבור": "Conjunction", "מילת יחס": "Preposition", "גוף": "Pronoun", "מילת קריאה": "Interjection"
         }
     };
 
@@ -256,7 +249,10 @@
             setupTabs();
             renderAll();
             updatePartButtons();
-        } catch (e) { document.getElementById('loading').innerText = "Error loading data."; }
+        } catch (e) { 
+            console.error(e);
+            document.getElementById('loading').innerText = "Error loading data. Check if Sheet is public."; 
+        }
     }
 
     function updatePartButtons() {
@@ -395,7 +391,6 @@
             lr.style.display = hasVisible ? "" : "none";
         });
         
-        // תיקון כאן: הצגת "לא נמצאו תוצאות" אם הספירה היא 0 ובוצע סינון כלשהו
         const isAnyFilterActive = q !== "" || !selectedFilters.has('all') || selectedPartsHe.size > 0 || selectedPartsEn.size > 0 || kidsMode;
         document.getElementById('noResults').style.display = (count === 0 && isAnyFilterActive) ? "block" : "none";
         
