@@ -27,15 +27,17 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
         .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
+        /* קיבוע סרגל עליון שלא יזוז בשינוי שפה */
         .top-bar { 
             display: flex !important; 
             justify-content: space-between !important; 
             flex-direction: row !important; 
+            direction: rtl !important; /* תמיד מימין לשמאל בסרגל העליון */
             margin-bottom: 15px; 
             gap: 10px;
         }
         
-        .top-btn { padding: 8px 15px; cursor: pointer; border-radius: 20px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); font-weight: bold; transition: 0.3s; min-width: 80px; }
+        .top-btn { padding: 8px 15px; cursor: pointer; border-radius: 20px; border: 1px solid var(--primary-blue); background: transparent; color: var(--primary-blue); font-weight: bold; transition: 0.3s; min-width: 100px; }
         .top-btn:hover { background: var(--primary-blue); color: white; }
         
         .kids-mode-btn { border-color: var(--kids-pink); color: var(--kids-pink); }
@@ -52,7 +54,7 @@
 
         .part-filter-area { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 10px; }
         .part-group { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; align-items: center; }
-        .part-label { font-size: 0.85em; font-weight: bold; min-width: 65px; }
+        .part-label { font-size: 0.85em; font-weight: bold; min-width: 70px; }
         .part-btn { padding: 4px 10px; border: 1px solid #ccc; background: var(--container-bg); color: var(--text-color); border-radius: 12px; cursor: pointer; font-size: 12px; transition: 0.2s; }
         .part-btn.active { background: #34a853 !important; color: white !important; border-color: #34a853 !important; }
 
@@ -67,13 +69,13 @@
         
         table { width: 100%; border-collapse: collapse; margin-top: 5px; background: var(--container-bg); }
         td { border: 1px solid var(--border-color); padding: 12px; text-align: center; }
-        .letter-divider { background-color: rgba(26, 115, 232, 0.1); font-weight: bold; font-size: 1.2em; color: var(--primary-blue); padding: 8px 20px !important; text-align: center !important; }
+        .letter-divider { background-color: rgba(26, 115, 232, 0.1); font-weight: bold; font-size: 1.2em; color: var(--primary-blue); padding: 8px 20px !important; }
         
         .info-tag { font-size: 0.75em; color: #777; display: block; margin-top: 3px; font-weight: normal; min-height: 1em; }
         .loading-msg, .no-results { text-align: center; font-weight: bold; padding: 20px; color: #666; }
         .no-results { color: #d93025; font-size: 1.2em; display: none; }
         
-        .word-count-display { font-size: 11px; color: #888; text-align: right; margin-bottom: 2px; font-weight: bold; }
+        .word-count-display { font-size: 11px; color: #888; text-align: right; margin-bottom: 5px; font-weight: bold; padding: 0 10px; }
         .form-container { margin-top: 40px; border-top: 2px solid var(--border-color); padding-top: 20px; }
         .dark-mode iframe { filter: invert(0.9) hue-rotate(180deg); }
     </style>
@@ -187,39 +189,36 @@
         currentLang = currentLang === 'he' ? 'en' : 'he';
         const isHe = currentLang === 'he';
         
-        // כיוון דף
+        // כיוון דף כללי (חוץ מהסרגל העליון)
         document.getElementById('mainHtml').dir = isHe ? 'rtl' : 'ltr';
-        document.body.style.direction = isHe ? 'rtl' : 'ltr';
-        document.getElementById('partFilterArea').style.direction = isHe ? 'rtl' : 'ltr';
         
-        // טקסטים כלליים
+        // טקסטים
         document.getElementById('langBtn').innerText = isHe ? 'English' : 'עברית';
         document.getElementById('mainTitle').innerText = trans[currentLang].title;
         document.getElementById('searchInput').placeholder = trans[currentLang].search;
         document.getElementById('kidsBtn').innerText = kidsMode ? trans[currentLang].kids_on : trans[currentLang].kids_off;
         
-        // כפתורי פילטר סוג
         document.getElementById('btn_all').innerText = trans[currentLang].all;
         document.getElementById('btn_word').innerText = trans[currentLang].word_only;
         document.getElementById('btn_sent_he').innerText = trans[currentLang].sent_he;
         document.getElementById('btn_sent_en').innerText = trans[currentLang].sent_en;
         document.getElementById('btn_sent_both').innerText = trans[currentLang].sent_both;
         
-        // חלקי דיבור - כותרות
         document.getElementById('lbl_part_he').innerText = trans[currentLang].part_he;
         document.getElementById('lbl_part_en').innerText = trans[currentLang].part_en;
         
-        // מיון וטאבים
         document.getElementById('lbl_sort_he').innerText = trans[currentLang].sort_he;
         document.getElementById('lbl_sort_en').innerText = trans[currentLang].sort_en;
+        
         document.getElementById('tabA').innerText = trans[currentLang].tabA;
         document.getElementById('tabB').innerText = trans[currentLang].tabB;
         document.getElementById('tabC').innerText = trans[currentLang].tabC;
         document.getElementById('tabAll').innerText = trans[currentLang].tabAll;
         
+        // עדכון טאבים פנימיים (כוכבים) ורשימות
         setupTabs();
         renderAll();
-        updatePartButtons(); // מרענן את הכפתורים שנוצרו דינמית מהשיטס
+        updatePartButtons();
     }
 
     function toggleDarkMode() {
@@ -235,22 +234,14 @@
             allData = rows.map(row => {
                 const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
                 if (!cols[0]) return null;
-
                 let rawLetter = cols[2] ? cols[2].replace('רשימה ', '').trim() : 'א';
                 let mappedType = rawLetter === 'א' ? 'A' : (rawLetter === 'ב' ? 'B' : 'C');
-                
                 const content = (cols[0] + " " + (cols[1] || "")).toLowerCase();
-                const isProfane = badWords.some(word => {
-                    const regex = new RegExp(`\\b${word}\\b`, 'i');
-                    return regex.test(content);
-                });
-
-                const partHe = cols[4] ? cols[4].split(',').map(s => s.trim()) : [];
-                const partEn = cols[5] ? cols[5].split(',').map(s => s.trim()) : [];
-
+                const isProfane = badWords.some(word => new RegExp(`\\b${word}\\b`, 'i').test(content));
                 return { 
                     he: cols[0] || '', en: cols[1] || '', type: mappedType, rawLetter: rawLetter, stars: cols[3] || '3',
-                    partHe, partEn,
+                    partHe: cols[4] ? cols[4].split(',').map(s => s.trim()) : [],
+                    partEn: cols[5] ? cols[5].split(',').map(s => s.trim()) : [],
                     hasSpaceHe: cols[0].trim().includes(' '), hasSpaceEn: (cols[1] || "").trim().includes(' '),
                     isProfane: isProfane
                 };
@@ -294,12 +285,14 @@
             if(!container || !content) return;
             const prefix = l === 'ALL' ? 'ALL' : l;
             const allId = l === 'ALL' ? 'GlobalALL' : l + '_ALL';
+            
             container.innerHTML = `<div class="sub-tabs">
                 <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}1')">★ 1</button>
                 <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}2')">★★ 2</button>
                 <button class="sub-tab-button" onclick="openSubTab(event, '${prefix}3')">★★★ 3</button>
                 <button class="sub-tab-button active" onclick="openSubTab(event, '${allId}')">${trans[currentLang].stars_all}</button>
             </div>`;
+            
             content.innerHTML = `
                 <div class="word-count-display"></div>
                 <div id="${prefix}1" class="sub-tab-content"><table id="table${prefix}1"><tbody></tbody></table></div>
@@ -348,8 +341,6 @@
                 tr.setAttribute('data-parent-id', key);
                 tr.setAttribute('data-space-he', item.hasSpaceHe);
                 tr.setAttribute('data-space-en', item.hasSpaceEn);
-                tr.setAttribute('data-type', item.type);
-                tr.setAttribute('data-raw-letter', item.rawLetter);
                 tr.setAttribute('data-stars', item.stars);
                 tr.setAttribute('data-is-profane', item.isProfane);
                 tr.setAttribute('data-belongs-to-letter', firstChar);
@@ -370,9 +361,7 @@
 
         document.querySelectorAll(".data-row").forEach(r => {
             const isVisibleTable = (r.getAttribute('data-parent-id') === currentId);
-            const isProfane = r.getAttribute('data-is-profane') === 'true';
-            
-            if (kidsMode && isProfane) { r.style.display = "none"; return; }
+            if (kidsMode && r.getAttribute('data-is-profane') === 'true') { r.style.display = "none"; return; }
 
             const spaceHe = r.getAttribute('data-space-he') === 'true';
             const spaceEn = r.getAttribute('data-space-en') === 'true';
@@ -392,12 +381,6 @@
             if (r.innerText.toLowerCase().includes(q) && isVisibleTable && matchesType && matchPartHe && matchPartEn) {
                 r.style.display = "";
                 count++;
-                const infoTag = r.querySelector('.info-tag');
-                const listName = currentLang === 'he' ? r.getAttribute('data-raw-letter') : r.getAttribute('data-type');
-                if (currentId === 'GlobalALL') infoTag.innerText = `${trans[currentLang].list_prefix} ${listName} - ★${r.getAttribute('data-stars')}`;
-                else if (currentId.startsWith('ALL')) infoTag.innerText = `${trans[currentLang].list_prefix} ${listName}`;
-                else if (currentId.includes('_ALL')) infoTag.innerText = `★${r.getAttribute('data-stars')}`;
-                else infoTag.innerText = "";
             } else { r.style.display = "none"; }
         });
         
@@ -408,12 +391,9 @@
             lr.style.display = hasVisible ? "" : "none";
         });
         
-        document.getElementById('noResults').style.display = (count === 0 && (q !== "" || !selectedFilters.has('all') || kidsMode || selectedPartsHe.size > 0 || selectedPartsEn.size > 0)) ? "block" : "none";
-        
+        document.getElementById('noResults').style.display = (count === 0 && q !== "") ? "block" : "none";
         const activeCountDisplay = document.querySelector('.tab-content.active .word-count-display');
-        if (activeCountDisplay) {
-            activeCountDisplay.innerText = `${trans[currentLang].count_prefix} ${count} ${trans[currentLang].count_suffix}`;
-        }
+        if (activeCountDisplay) activeCountDisplay.innerText = `${trans[currentLang].count_prefix} ${count} ${trans[currentLang].count_suffix}`;
     }
 
     function openTab(e, id) {
