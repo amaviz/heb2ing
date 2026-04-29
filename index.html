@@ -27,7 +27,6 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
         .container { max-width: 1000px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
-        /* סרגל עליון מקובע - תמיד באותו סדר */
         .top-bar { 
             display: flex !important; 
             justify-content: space-between !important; 
@@ -214,6 +213,9 @@
         document.getElementById('tabC').innerText = trans[currentLang].tabC;
         document.getElementById('tabAll').innerText = trans[currentLang].tabAll;
         
+        // תיקון: עדכון הטקסט של "לא נמצאה מילה"
+        document.getElementById('noResults').innerText = trans[currentLang].no_results;
+        
         setupTabs();
         renderAll();
         updatePartButtons();
@@ -251,7 +253,7 @@
             updatePartButtons();
         } catch (e) { 
             console.error(e);
-            document.getElementById('loading').innerText = "Error loading data. Check if Sheet is public."; 
+            document.getElementById('loading').innerText = "Error loading data."; 
         }
     }
 
